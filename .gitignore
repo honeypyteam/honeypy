@@ -1,0 +1,12 @@
+# --- Bitcode --- #
+__pycache__/
+
+# --- MacOS Junk --- #
+.DS_Store
+
+# --- Build --- #
+dist/
+
+# --- Created by VSCode --- #
+settings.json
+.vscode
