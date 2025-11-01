@@ -5,3 +5,4 @@ def test_honeypy():
     honeypy = HoneyPy()
 
     assert honeypy is not None
+    assert True
