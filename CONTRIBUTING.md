@@ -64,7 +64,7 @@ The seed is optional, and will shuffle the order of the tests and is good practi
 To run the full suite with linting, formatting and type-checking, you will need to install black, isort, autoflake, flake8 and mypy with pipx, and run `tox`.
 
 ## Lint and Typecheck Locally
-Install `black`, `isort`, `autoflake`, `flake8`, `mypy`, system-wide with `pipx` or in your environment with `pip`. Go to the repository root and run `black .`, `isort .`, `autoflake .`, `flake8 .` and `mypy .` to lint/format/type-check.
+Install `black`, `isort`, `autoflake`, `flake8`, `mypy`, `pydocstyle` system-wide with `pipx` or in your environment with `pip`. Go to the repository root and run `black .`, `isort .`, `autoflake .`, `flake8 .`, `mypy .` and `pydocstyle` to lint/format/type-check.
 
 It is recommended to run the corresponding tox environments for these commands; for instance, running `mypy .` in the way it is done in CI runs will probably require a few extra dependencies already taken into account by the `tox.ini` file.
 
