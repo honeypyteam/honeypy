@@ -56,6 +56,18 @@ Run pytest as usual. In the root of the project run
 pytest
 ```
 
+And tox tests in python 3.13 can be run with, say
+```bash
+tox -e py313 -- --randomly-seed=1234
+```
+The seed is optional, and will shuffle the order of the tests and is good practice.
+To run the full suite with linting, formatting and type-checking, you will need to install black, isort, autoflake, flake8 and mypy with pipx, and run `tox`.
+
+## Lint and Typecheck Locally
+Install `black`, `isort`, `autoflake`, `flake8`, `mypy`, system-wide with `pipx` or in your environment with `pip`. Go to the repository root and run `black .`, `isort .`, `autoflake .`, `flake8 .` and `mypy .` to lint/format/type-check.
+
+It is recommended to run the corresponding tox environments for these commands; for instance, running `mypy .` in the way it is done in CI runs will probably require a few extra dependencies already taken into account by the `tox.ini` file.
+
 ## Commits and Semantic Versioning
 We bump our releases and update our changelog automatically, but this requires commits to follow the [conventional commits](https://www.conventionalcommits.org/en/v1.0.0/) scheme. We use a combination of [release-please](https://github.com/googleapis/release-please) and [commitlint](https://commitlint.js.org/).
 
