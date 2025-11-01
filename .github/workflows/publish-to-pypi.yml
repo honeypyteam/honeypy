@@ -32,13 +32,16 @@ jobs:
   publish-to-pypi:
     name: >-
       Publish Python 🐍 distribution 📦 to PyPI
-    if: startsWith(github.ref, 'refs/tags/')
+    if: github.ref_name == 'main'
     needs:
     - build
     runs-on: ubuntu-latest
     environment:
       name: pypi
       url: https://pypi.org/p/honeypy
+
+    permissions:
+      id-token: write
 
     steps:
     - name: Download all the dists
