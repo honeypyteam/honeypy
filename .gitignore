@@ -13,3 +13,6 @@ settings.json
 
 # --- tests ---
 .pytest_cache
+
+# --- typechecks --- #
+.mypy_cache
