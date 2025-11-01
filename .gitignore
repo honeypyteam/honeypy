@@ -10,3 +10,6 @@ dist/
 # --- Created by VSCode --- #
 settings.json
 .vscode
+
+# --- tests ---
+.pytest_cache
