@@ -18,6 +18,11 @@ packages = [
 ]
 
 
+[tool.black]
+line-length = 88
+target-version = ["py313"]
+
+
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
 build-backend = "poetry.core.masonry.api"
