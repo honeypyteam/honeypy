@@ -16,3 +16,6 @@ settings.json
 
 # --- typechecks --- #
 .mypy_cache
+
+# --- tox --- #
+.tox
