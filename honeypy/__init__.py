@@ -9,6 +9,7 @@ transformation, analysis, and summarization across multiple datasets and project
 """
 
 from .honeypy import HoneyPy
+from .hypergraph import *
 
 __version__ = "0.1.0"
 __author__ = "Lawrence Borst"

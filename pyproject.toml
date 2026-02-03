@@ -14,7 +14,7 @@ dependencies = [
 
 [tool.poetry]
 packages = [
-    {include = "src"}
+    {include = "honeypy"}
 ]
 
 
