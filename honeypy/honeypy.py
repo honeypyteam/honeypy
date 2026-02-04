@@ -24,7 +24,8 @@ class HoneyPy(ABC):
     def package_id(self) -> uuid.UUID:
         """Return a unique plugin identifier.
 
-        Returns:
+        Returns
+        -------
             uuid.UUID: A unique identifier for this plugin (e.g., 'linguistics_nlp',
                 'medical_imaging').
 
@@ -38,7 +39,8 @@ class HoneyPy(ABC):
     def package_name(self) -> str:
         """Return human-readable name for the plugin.
 
-        Returns:
+        Returns
+        -------
             str: A descriptive name for this plugin (e.g., 'Audio Processor',
                 'Medical Imaging Pipeline').
         """
@@ -51,7 +53,8 @@ class HoneyPy(ABC):
         Commands associated with this plugin will use this name as a prefix
         or identifier in the command-line interface.
 
-        Returns:
+        Returns
+        -------
             str: A descriptive command line name for this plugin (e.g.,
                 'audio-processor', 'mip').
         """
