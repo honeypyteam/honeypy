@@ -1,5 +1,23 @@
 # Changelog
 
+## 0.1.0 (2026-02-04)
+
+
+### Features
+
+* create honeypy base class ([2ebbfff](https://github.com/honeypyteam/honeypy/commit/2ebbfffb0c0bbc26816b6e2b4c658ed3dc46bc95))
+* metagraph model ([7f57763](https://github.com/honeypyteam/honeypy/commit/7f577630b5e533999e446155f6d3dd2d694af006))
+
+
+### Dependencies
+
+* add pytest as dev dependency ([5d7f4d7](https://github.com/honeypyteam/honeypy/commit/5d7f4d7155c9a60de20b4a9dc5c11b887f97757c))
+
+
+### Documentation
+
+* add tox-related info ([2f0817d](https://github.com/honeypyteam/honeypy/commit/2f0817d6139f7a2cb109266d731862c38108c779))
+
 ## 0.1.0 (2025-11-02)
 
 
