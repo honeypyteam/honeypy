@@ -9,9 +9,9 @@ transformation, analysis, and summarization across multiple datasets and project
 """
 
 from .honeypy import HoneyPy
+from .metagraph import honey_collection, honey_file, honey_point
 
-__version__ = "0.1.0"
+__all__ = ["HoneyPy", "honey_point", "honey_file", "honey_collection"]
+
 __author__ = "Lawrence Borst"
 __email__ = "laurens.s.borst@gmail.com"
-
-__all__ = ["HoneyPy"]

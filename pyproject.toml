@@ -14,7 +14,7 @@ dependencies = [
 
 [tool.poetry]
 packages = [
-    {include = "src"}
+    {include = "honeypy"}
 ]
 
 
@@ -33,11 +33,16 @@ use_parentheses = true
 ensure_newline_before_comments = true
 
 
+[tool.pydocstyle]
+convention = "numpy"
+
+
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
 build-backend = "poetry.core.masonry.api"
 
 [dependency-groups]
 dev = [
-    "pytest (>=8.4.2,<9.0.0)"
+    "pytest (>=8.4.2,<9.0.0)",
+    "pyyaml (>=6.0.3,<7.0.0)",
 ]
