@@ -7,10 +7,13 @@ are intentionally lightweight: they do not implement the full node lifecycle
 (loading/unloading) handled by :class:`~honeypy.metagraph.meta.honey_node.HoneyNode`.
 """
 
-from typing import Any, Dict, Final, Generic, Optional, Set, TypeVar
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Any, Dict, Final, Generic, Optional, Set, TypeVar
 from uuid import UUID, uuid4
 
-from honeypy.metagraph.meta.honey_node import HoneyNode
+if TYPE_CHECKING:
+    from honeypy.metagraph.honey_file import HoneyFile
 
 T = TypeVar("T")
 
@@ -43,14 +46,14 @@ class HoneyPoint(Generic[T]):
     _id: Final[UUID]
     _data: T
     _metadata: Dict[str, Any]
-    _parents: Set[HoneyNode[Any]]
+    _parents: Set[HoneyFile["HoneyPoint[T]"]]
 
     def __init__(
         self,
         data: T,
         *,
         metadata: Optional[Dict[str, Any]] = None,
-        parents: Optional[Set[HoneyNode[Any]]] = None,
+        parents: Optional[Set[HoneyFile["HoneyPoint[T]"]]] = None,
     ) -> None:
         self._id: UUID = uuid4()
         self._data = data
@@ -73,7 +76,7 @@ class HoneyPoint(Generic[T]):
         """UUID: Stable identifier for the point (read-only)."""
         return self._id
 
-    def add_parent(self, parent: HoneyNode) -> None:
+    def add_parent(self, parent: HoneyFile["HoneyPoint[T]"]) -> None:
         """Register ``parent`` as a backlink to this point.
 
         Parameters
@@ -83,12 +86,12 @@ class HoneyPoint(Generic[T]):
         """
         self._parents.add(parent)
 
-    def remove_parent(self, parent: HoneyNode) -> None:
+    def remove_parent(self, parent: HoneyFile["HoneyPoint[T]"]) -> None:
         """Remove ``parent`` from the point's parent set if present."""
         self._parents.discard(parent)
 
     @property
-    def parents(self) -> Set[HoneyNode]:
+    def parents(self) -> Set[HoneyFile["HoneyPoint[T]"]]:
         """Return the live set of parent nodes referencing this point.
 
         Note

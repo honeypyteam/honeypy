@@ -1,24 +1,23 @@
-from typing import Iterable, List, Set, TypedDict
+from typing import List, Set, TypedDict
 
 from honeypy.metagraph.honey_file import HoneyFile
-from honeypy.metagraph.honey_point import HoneyPoint
-from tests.projects.project_1.src.str_int_point import StrIntTuple
+from tests.projects.project_1.src.str_int_point import StrIntPoint
 
 
 class Metadata(TypedDict):
     columns: List[str]
 
 
-class KeyValFile(HoneyFile[StrIntTuple]):
-    def _load(self) -> Iterable[HoneyPoint[StrIntTuple]]:
-        pts: Set[HoneyPoint[StrIntTuple]] = set()
+class KeyValFile(HoneyFile[StrIntPoint]):
+    def _load(self):
+        pts: Set[StrIntPoint] = set()
 
         with self._location.open("r", encoding="utf-8") as fh:
             next(fh)
 
             for line in fh:
                 key, val = line.split(",")
-                pts.add(HoneyPoint[StrIntTuple]((key, int(val)), parents={self}))
+                pts.add(StrIntPoint((key, int(val)), parents={self}))
 
         return pts
 

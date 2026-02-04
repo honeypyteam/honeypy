@@ -11,9 +11,9 @@ def test_honey_collection(project: ProjectGetter) -> None:
     children = collection.children
 
     assert {
-        (child.location.name, key, value)
-        for child in children
-        for key, value in {p.value for p in child.children}
+        (file.location.name, key, value)
+        for file in children
+        for key, value in {point.value for point in file.children}
     } == {
         ("1_2.csv", "d", 10),
         ("1_2.csv", "b", 4),
