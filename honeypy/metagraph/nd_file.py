@@ -24,13 +24,12 @@ from typing import (
     Unpack,
 )
 
-from honeypy.metagraph.honey_point import HoneyPoint
 from honeypy.metagraph.meta.honey_node import HoneyNode
 
 if TYPE_CHECKING:
     from honeypy.metagraph.honey_collection import HoneyFile
 
-P = TypeVar("P", bound=HoneyPoint[Any])
+P = TypeVar("P")
 Ts = TypeVarTuple("Ts")
 
 
