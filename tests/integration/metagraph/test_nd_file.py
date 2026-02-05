@@ -17,9 +17,10 @@ def test_nd_file_pullback(project: ProjectGetter) -> None:
 
     file_3 = file_1.pullback(file_2, int_map, str_map)
 
-    children = file_3.children
-
-    assert {(*integer.value, *string.value) for (integer, string) in children} == {
+    assert {
+        (*integer_point.value, *string_point.value)
+        for (integer_point, string_point) in file_3
+    } == {
         ("a", 1, "a", "one\n"),
         ("b", 3, "b", "three\n"),
         ("c", 9, "c", "nine\n"),

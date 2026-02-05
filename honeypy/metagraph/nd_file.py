@@ -18,6 +18,7 @@ from typing import (
     Callable,
     Generic,
     Iterable,
+    Iterator,
     Tuple,
     TypeVar,
     TypeVarTuple,
@@ -73,3 +74,7 @@ class NDHoneyFile(HoneyNode, Generic[Unpack[Ts]]):
         a lightweight in-memory node containing the joined tuples is returned.
         """
         return super().pullback(other, map_1, map_2)
+
+    def __iter__(self: "NDHoneyFile[Unpack[Ts]]") -> Iterator[Tuple[Unpack[Ts]]]:
+        """Call super().__iter__."""
+        return super().__iter__()

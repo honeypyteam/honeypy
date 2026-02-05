@@ -52,9 +52,9 @@ class HoneyNode(ABC):
         self,
         location: Path,
         principal_parent: Optional["HoneyNode"] = None,
-        load: Optional[bool] = False,
         *,
         metadata: Optional[Metadata] = None,
+        load: Optional[bool] = False,
     ) -> None:
         """Create a new HoneyNode.
 

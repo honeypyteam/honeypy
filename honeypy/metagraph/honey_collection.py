@@ -18,6 +18,7 @@ from typing import (
     Callable,
     Generic,
     Iterable,
+    Iterator,
     Tuple,
     TypeVar,
     TypeVarTuple,
@@ -84,3 +85,7 @@ class HoneyCollection(HoneyNode, Generic[F]):
         a lightweight in-memory node containing the joined tuples is returned.
         """
         return super().pullback(other, map_1, map_2)
+
+    def __iter__(self: "HoneyCollection[F]") -> Iterator[F]:
+        """Call super().__iter__."""
+        return super().__iter__()

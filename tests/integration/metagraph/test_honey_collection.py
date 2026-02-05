@@ -10,12 +10,10 @@ def test_honey_collection(project: ProjectGetter) -> None:
 
     assert collection.loaded
 
-    children = collection.children
-
     assert {
         (file.location.name, key, value)
-        for file in children
-        for key, value in {point.value for point in file.children}
+        for file in collection
+        for key, value in {point.value for point in file}
     } == {
         ("1_1.csv", "a", 1),
         ("1_1.csv", "b", 3),
