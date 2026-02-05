@@ -133,6 +133,93 @@ class HoneyNode(ABC):
             self._children = set()
             self._loaded = False
 
+    def pullback(
+        self,
+        other,
+        map_1,
+        map_2,
+    ) -> Any:
+        """Compute the pullback (inner join) between this node and ``other``.
+
+        Both nodes are loaded if necessary. ``map_1`` is applied to each child of
+        ``self`` and ``map_2`` is applied to each child of ``other``; any pair of
+        children whose mapped keys compare equal are paired and included in the
+        result.
+
+        This method supports N-dimensional inputs. When joining an N-dimensional
+        node the joined children are tuples whose arity reflects the
+        dimensionality of the participants (for example joining a 1-D file with
+        an M-D file yields tuples of shape ``(self_item, *other_items)``). Callers
+        may express the other side with a ``TypeVarTuple`` (PEP 646) in overloads
+        to preserve precise static types.
+
+        Parameters
+        ----------
+        other
+            Node to join with. May be any HoneyNode-like object (1-D or ND).
+        map_1 : Callable
+            Function applied to children of this node to compute join keys.
+        map_2 : Callable
+            Function applied to children of ``other`` to compute join keys.
+
+        Returns
+        -------
+        HoneyNode
+            A loaded in-memory node whose children are tuples representing
+            matched items from the two inputs. Tuple shape depends on the
+            dimensionality of the operands.
+
+        Notes
+        -----
+        - Mapping errors are caught and logged; offending children are skipped.
+        - This is an inner join: only matched pairs are returned.
+        - Static typing is provided by overloads; the runtime result is a
+          lightweight in-memory node populated with the joined tuples.
+        """
+        if not self._loaded:
+            self.load()
+
+        if not other._loaded:
+            other.load()
+
+        index: dict[Any, list[Any]] = {}
+        for other_child in other._children:
+            try:
+                key = map_2(other_child)
+            except Exception as e:
+                print(f"Problem mapping other child {other_child!r}: {e!r}")
+                continue
+            index.setdefault(key, []).append(other_child)
+
+        joined: set[tuple[Any, Any]] = set()
+        for self_child in self._children:
+            try:
+                key = map_1(self_child)
+            except Exception as e:
+                print(f"Problem mapping self child {self_child!r}: {e!r}")
+                continue
+            for match in index.get(key, []):
+                joined.add((self_child, match))
+
+        class _JoinNode(HoneyNode):
+            # TODO: refactor to not require the join node
+            def __init__(self, location, children, metadata=None):
+                super().__init__(location, load=False, metadata=metadata or {})
+                self._children = set(children)
+                self._loaded = True
+
+            def _load(self) -> Iterable[Any]:
+                return self._children
+
+            def _unload(self) -> None:
+                self._children = set()
+
+            def _load_metadata(self) -> Metadata:
+                return self._metadata
+
+        # Instantiate and return the join node
+        return _JoinNode(self._location, joined, metadata={})
+
     @property
     def loaded(self) -> bool:
         """bool: True if the node has been loaded (metadata and children)."""

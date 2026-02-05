@@ -1,23 +1,25 @@
-from typing import List, Set, TypedDict
+from typing import Generic, List, Set, TypedDict, TypeVar
 
 from honeypy.metagraph.honey_file import HoneyFile
-from tests.projects.project_1.src.str_int_point import StrIntPoint
+from tests.projects.project_1.src.key_val_point import KeyValPoint
+
+T = TypeVar("T")
 
 
 class Metadata(TypedDict):
     columns: List[str]
 
 
-class KeyValFile(HoneyFile[StrIntPoint]):
-    def _load(self):
-        pts: Set[StrIntPoint] = set()
+class KeyValFile(HoneyFile[KeyValPoint[T]], Generic[T]):
+    def _load(self) -> Set[KeyValPoint[T]]:
+        pts: Set[KeyValPoint[T]] = set()
 
         with self._location.open("r", encoding="utf-8") as fh:
             next(fh)
 
             for line in fh:
                 key, val = line.split(",")
-                pts.add(StrIntPoint((key, int(val)), parents={self}))
+                pts.add(KeyValPoint[T]((key, self._convert(val)), parents={self}))
 
         return pts
 
@@ -30,3 +32,16 @@ class KeyValFile(HoneyFile[StrIntPoint]):
 
     def _unload(self) -> None:
         return
+
+    def _convert(self, _: str) -> T:
+        raise NotImplementedError
+
+
+class KeyIntFile(KeyValFile[int]):
+    def _convert(self, value: str) -> int:
+        return int(value)
+
+
+class KeyStrFile(KeyValFile[str]):
+    def _convert(self, value: str) -> str:
+        return value
