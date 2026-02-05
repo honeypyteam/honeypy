@@ -13,12 +13,25 @@ The collection is responsible for locating/instantiating HoneyFile children and
 can be loaded lazily (via the `load` mechanism on HoneyNode).
 """
 
-from typing import Any, Generic, Iterable, TypeVar
+from typing import (
+    Any,
+    Callable,
+    Generic,
+    Iterable,
+    Tuple,
+    TypeVar,
+    TypeVarTuple,
+    Unpack,
+    overload,
+)
 
 from honeypy.metagraph.honey_file import HoneyFile
 from honeypy.metagraph.meta.honey_node import HoneyNode
+from honeypy.metagraph.nd_collection import NDHoneyCollection
 
-F = TypeVar("F", bound=HoneyFile[Any])
+F = TypeVar("F", bound=HoneyFile[Any], covariant=True)
+F2 = TypeVar("F2", bound=HoneyFile[Any], covariant=True)
+Ts = TypeVarTuple("Ts")
 
 
 class HoneyCollection(HoneyNode, Generic[F]):
@@ -42,3 +55,32 @@ class HoneyCollection(HoneyNode, Generic[F]):
     def children(self) -> Iterable[F]:
         """Iterable[F]: Live iterable view of the node's children."""
         return super().children
+
+    @overload
+    def pullback(
+        self: "HoneyCollection[F]",
+        other: "HoneyCollection[F2]",
+        map_1: Callable[[F], Any],
+        map_2: Callable[[F2], Any],
+    ) -> "NDHoneyCollection[F, F2]": ...
+
+    @overload
+    def pullback(
+        self: "HoneyCollection[F]",
+        other: "NDHoneyCollection[Unpack[Ts]]",
+        map_1: Callable[[F], Any],
+        map_2: Callable[[Tuple[Unpack[Ts]]], Any],
+    ) -> "NDHoneyCollection[F, Unpack[Ts]]": ...
+
+    def pullback(self, other, map_1, map_2) -> Any:
+        """Perform a pullback (inner join) between this collection and ``other``.
+
+        Both collections are loaded when needed. ``map_1`` is applied to each
+        child of this collection and ``map_2`` to each child (or tuple) of ``other``;
+        items whose mapped keys compare equal are paired. The joined children
+        are tuples whose arity reflects the dimensionality of the operands.
+
+        Static overloads in the package express precise ND shapes; at runtime
+        a lightweight in-memory node containing the joined tuples is returned.
+        """
+        return super().pullback(other, map_1, map_2)

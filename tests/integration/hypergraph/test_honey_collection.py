@@ -1,10 +1,12 @@
+from datetime import datetime, timezone
+
 from tests.fixtures.get_project import ProjectGetter
-from tests.projects.project_1.src.key_val_collection import KeyValCollection
+from tests.projects.project_1.src.key_val_collection import KeyIntCollection
 
 
 def test_honey_collection(project: ProjectGetter) -> None:
     location = project("project_1", copy=False) / "collection_1"
-    collection = KeyValCollection(location=location, load=True)
+    collection = KeyIntCollection(location=location, load=True)
 
     assert collection.loaded
 
@@ -15,12 +17,19 @@ def test_honey_collection(project: ProjectGetter) -> None:
         for file in children
         for key, value in {point.value for point in file.children}
     } == {
-        ("1_2.csv", "d", 10),
-        ("1_2.csv", "b", 4),
-        ("1_1.csv", "c", 13),
-        ("1_1.csv", "d", 4),
-        ("1_2.csv", "a", 2),
-        ("1_2.csv", "c", 9),
         ("1_1.csv", "a", 1),
         ("1_1.csv", "b", 3),
+        ("1_1.csv", "c", 9),
+        ("1_1.csv", "d", 4),
+        ("1_2.csv", "a", 2),
+        ("1_2.csv", "b", 4),
+        ("1_2.csv", "c", 9),
+        ("1_2.csv", "d", 8),
+    }
+
+    assert collection.metadata == {
+        "title": "collection 1",
+        "description": "collection of key value files in the 1-10 range",
+        "created_at": datetime(2026, 3, 4, 12, 0, tzinfo=timezone.utc),
+        "created_by": "test user 1",
     }
