@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.0](https://github.com/honeypyteam/honeypy/compare/v0.2.0...v0.3.0) (2026-02-05)
+
+
+### Features
+
+* add union types ([324e7fb](https://github.com/honeypyteam/honeypy/commit/324e7fb71f5838bb5d5a75840497dac9a7b6d898))
+
 ## 0.2.0 (2026-02-04)
 
 
