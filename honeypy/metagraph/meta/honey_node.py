@@ -10,23 +10,18 @@ from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import (
     Any,
-    Generic,
     Iterable,
     Iterator,
     Mapping,
     Optional,
     Set,
     TypeAlias,
-    TypeVar,
 )
-
-T = TypeVar("T")
-
 
 Metadata: TypeAlias = Mapping[str, Any]
 
 
-class HoneyNode(ABC, Generic[T]):
+class HoneyNode(ABC):
     """Abstract base node for the metagraph.
 
     A HoneyNode manages a set of child objects (``T``) and exposes a small
@@ -46,9 +41,9 @@ class HoneyNode(ABC, Generic[T]):
         Optional initial metadata mapping for the node.
     """
 
-    _children: Set[T]
-    _parents: Set["HoneyNode[Any]"]
-    _principal_parent: Optional["HoneyNode[Any]"]
+    _children: Set[Any]
+    _parents: Set["HoneyNode"]
+    _principal_parent: Optional["HoneyNode"]
     _loaded: bool
     _metadata: Metadata
     _location: Path
@@ -80,12 +75,12 @@ class HoneyNode(ABC, Generic[T]):
         if load:
             self.load()
 
-    def add(self, items: Iterable[T]) -> None:
+    def add(self, items: Iterable[Any]) -> None:
         """Add children to the node.
 
         Parameters
         ----------
-        items : Iterable[T]
+        items : Iterable[Any]
             An iterable of child objects to insert into the node's internal
             child set. Implementations should ensure bidirectional
             consistency if they also maintain parent links on children.
@@ -149,8 +144,8 @@ class HoneyNode(ABC, Generic[T]):
         return self._metadata
 
     @property
-    def children(self) -> Iterable[T]:
-        """Iterable[T]: Live iterable view of the node's children."""
+    def children(self) -> Iterable[Any]:
+        """Iterable[Any]: Live iterable view of the node's children."""
         return self._children
 
     @property
@@ -159,12 +154,12 @@ class HoneyNode(ABC, Generic[T]):
         return self._location
 
     @abstractmethod
-    def _load(self) -> Iterable[T]:
+    def _load(self) -> Iterable[Any]:
         """Discover or construct the node's children.
 
         Returns
         -------
-        Iterable[T]
+        Iterable[Any]
             Iterable of child objects. Implementations may return sets,
             lists or generators.
         """
@@ -190,7 +185,7 @@ class HoneyNode(ABC, Generic[T]):
         """Return the number of children currently attached to the node."""
         return len(self._children)
 
-    def __iter__(self) -> Iterator[T]:
+    def __iter__(self) -> Iterator[Any]:
         """Iterate over the node's children.
 
         Yields

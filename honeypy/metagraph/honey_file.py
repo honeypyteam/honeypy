@@ -8,22 +8,22 @@ HoneyNode contract.
 
 Notes
 -----
-- A HoneyFile is parameterized by the point payload type ``T`` exposed by its
+- A HoneyFile is parameterized by the point payload type ``P`` exposed by its
   HoneyPoint children (e.g. ``HoneyFile[tuple[str, int]]``).
 - Loading/unloading, metadata and child management are provided by
   :class:`honeypy.metagraph.meta.honey_node.HoneyNode`.
 """
 
-from typing import Generic, TypeVar
+from typing import Any, Generic, Iterable, TypeVar
 
 from honeypy.metagraph.honey_point import HoneyPoint
 from honeypy.metagraph.meta.honey_node import HoneyNode
 
-T = TypeVar("T")
+P = TypeVar("P", bound=HoneyPoint[Any])
 
 
-class HoneyFile(HoneyNode[HoneyPoint[T]], Generic[T]):
-    """Represents a single file node containing HoneyPoint[T] items.
+class HoneyFile(HoneyNode, Generic[P]):
+    """Represents a single file node containing HoneyPoint[P] items.
 
     Parameters
     ----------
@@ -40,4 +40,7 @@ class HoneyFile(HoneyNode[HoneyPoint[T]], Generic[T]):
         Lightweight wrapper type used for the points contained in the file.
     """
 
-    pass
+    @property
+    def children(self) -> Iterable[P]:
+        """Iterable[P]: Live iterable view of the node's children."""
+        return super().children

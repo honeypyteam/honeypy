@@ -13,15 +13,15 @@ The collection is responsible for locating/instantiating HoneyFile children and
 can be loaded lazily (via the `load` mechanism on HoneyNode).
 """
 
-from typing import Generic, TypeVar
+from typing import Any, Generic, Iterable, TypeVar
 
 from honeypy.metagraph.honey_file import HoneyFile
 from honeypy.metagraph.meta.honey_node import HoneyNode
 
-T = TypeVar("T")
+F = TypeVar("F", bound=HoneyFile[Any])
 
 
-class HoneyCollection(HoneyNode[HoneyFile[T]], Generic[T]):
+class HoneyCollection(HoneyNode, Generic[F]):
     """A collection of HoneyFile nodes.
 
     Parameters
@@ -38,4 +38,7 @@ class HoneyCollection(HoneyNode[HoneyFile[T]], Generic[T]):
         The filesystem location backing this collection.
     """
 
-    pass
+    @property
+    def children(self) -> Iterable[F]:
+        """Iterable[F]: Live iterable view of the node's children."""
+        return super().children

@@ -5,7 +5,6 @@ import yaml
 
 from honeypy.metagraph.honey_collection import HoneyCollection
 from tests.projects.project_1.src.key_val_file import KeyValFile
-from tests.projects.project_1.src.str_int_point import StrIntTuple
 
 
 class MetaData(TypedDict):
@@ -15,7 +14,7 @@ class MetaData(TypedDict):
     created_by: str
 
 
-class KeyValCollection(HoneyCollection[StrIntTuple]):
+class KeyValCollection(HoneyCollection[KeyValFile]):
     def _load(self) -> Iterable[KeyValFile]:
         return {
             KeyValFile(f, load=True, principal_parent=self)
