@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.0](https://github.com/honeypyteam/honeypy/compare/v0.3.0...v0.4.0) (2026-02-05)
+
+
+### Features
+
+* boilerplate for n-dimensional metagraph nodes ([ce6af8e](https://github.com/honeypyteam/honeypy/commit/ce6af8e91483b76acd06e88b125396695779a4e3))
+
 ## [0.3.0](https://github.com/honeypyteam/honeypy/compare/v0.2.0...v0.3.0) (2026-02-05)
 
 
