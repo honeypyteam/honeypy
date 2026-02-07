@@ -1,7 +1,7 @@
 from typing import Generic, List, Set, TypedDict, TypeVar
 
 from honeypy.metagraph.honey_file import HoneyFile
-from tests.projects.project_1.src.key_val_point import KeyValPoint
+from tests.plugins.plugin_1.src.key_val_point import KeyValPoint
 
 T = TypeVar("T")
 

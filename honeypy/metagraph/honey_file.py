@@ -68,7 +68,7 @@ class HoneyFile(HoneyNode, Generic[P]):
         other: NDHoneyFile[Unpack[Ts]],
         map_1: Callable[[P], Any],
         map_2: Callable[[Tuple[Unpack[Ts]]], Any],
-    ) -> "NDHoneyFile[P, Unpack[Ts]]": ...
+    ) -> NDHoneyFile[P, Unpack[Ts]]: ...
 
     @overload
     def pullback(
@@ -76,7 +76,7 @@ class HoneyFile(HoneyNode, Generic[P]):
         other: "HoneyFile[P2]",
         map_1: Callable[[P], Any],
         map_2: Callable[[P2], Any],
-    ) -> "NDHoneyFile[P, P2]": ...
+    ) -> NDHoneyFile[P, P2]: ...
 
     def pullback(
         self, other: object, map_1: Callable[..., Any], map_2: Callable[..., Any]

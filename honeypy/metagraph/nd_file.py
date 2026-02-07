@@ -58,11 +58,11 @@ class NDHoneyFile(HoneyNode, Generic[Unpack[Ts]]):
         return super().children
 
     def pullback(
-        self: "NDHoneyFile[Unpack[Ts]]",
+        self: NDHoneyFile[Unpack[Ts]],
         other: HoneyFile[P],
         map_1: Callable[[Tuple[Unpack[Ts]]], Any],
         map_2: Callable[[P], Any],
-    ) -> "NDHoneyFile[Unpack[Ts], P]":
+    ) -> NDHoneyFile[Unpack[Ts], P]:
         """Perform a pullback (inner join) between this ND file and ``other``.
 
         Both files are loaded when needed. ``map_1`` is applied to each tuple
@@ -75,6 +75,6 @@ class NDHoneyFile(HoneyNode, Generic[Unpack[Ts]]):
         """
         return super().pullback(other, map_1, map_2)
 
-    def __iter__(self: "NDHoneyFile[Unpack[Ts]]") -> Iterator[Tuple[Unpack[Ts]]]:
+    def __iter__(self: NDHoneyFile[Unpack[Ts]]) -> Iterator[Tuple[Unpack[Ts]]]:
         """Call super().__iter__."""
         return super().__iter__()

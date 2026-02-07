@@ -1,11 +1,11 @@
 from datetime import datetime, timezone
 
-from tests.fixtures.get_project import ProjectGetter
-from tests.projects.project_1.src.key_val_collection import KeyIntCollection
+from tests.fixtures.get_plugin import PluginGetter
+from tests.plugins.plugin_1.src.key_val_collection import KeyIntCollection
 
 
-def test_honey_collection(project: ProjectGetter) -> None:
-    location = project("project_1", copy=False) / "collection_1"
+def test_honey_collection(plugin: PluginGetter) -> None:
+    location = plugin("plugin_1", copy=False) / "project" / "collection_1"
     collection = KeyIntCollection(location=location, load=True)
 
     assert collection.loaded

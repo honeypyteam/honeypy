@@ -5,7 +5,7 @@ import yaml
 
 from honeypy.metagraph.honey_collection import HoneyCollection
 from honeypy.metagraph.honey_file import HoneyFile
-from tests.projects.project_1.src.key_val_file import KeyIntFile, KeyStrFile
+from tests.plugins.plugin_1.src.key_val_file import KeyIntFile, KeyStrFile
 
 
 class MetaData(TypedDict):
