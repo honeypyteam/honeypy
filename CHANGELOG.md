@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.0](https://github.com/honeypyteam/honeypy/compare/v0.4.0...v0.5.0) (2026-02-07)
+
+
+### Features
+
+* add honey-project boilerplate ([fe0674d](https://github.com/honeypyteam/honeypy/commit/fe0674d312fbb4b946de03bcdc324cbec1035f70))
+
 ## [0.4.0](https://github.com/honeypyteam/honeypy/compare/v0.3.0...v0.4.0) (2026-02-05)
 
 
