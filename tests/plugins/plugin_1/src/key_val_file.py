@@ -8,6 +8,7 @@ T = TypeVar("T")
 
 class Metadata(TypedDict):
     columns: List[str]
+    filename: str
 
 
 class KeyValFile(HoneyFile[KeyValPoint[T]], Generic[T]):
@@ -28,7 +29,7 @@ class KeyValFile(HoneyFile[KeyValPoint[T]], Generic[T]):
             line = next(fh)
             cols = line.split(",")
 
-            return {"columns": cols}
+            return {"columns": cols, "filename": self._location.name}
 
     def _unload(self) -> None:
         return

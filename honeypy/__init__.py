@@ -9,9 +9,26 @@ transformation, analysis, and summarization across multiple datasets and project
 """
 
 from .honeypy import HoneyPy
-from .metagraph import honey_collection, honey_file, honey_point
+from .metagraph import (
+    honey_collection,
+    honey_file,
+    honey_point,
+    honey_project,
+    nd_collection,
+    nd_file,
+    nd_project,
+)
 
-__all__ = ["HoneyPy", "honey_point", "honey_file", "honey_collection"]
+__all__ = [
+    "HoneyPy",
+    "honey_point",
+    "honey_file",
+    "honey_collection",
+    "honey_project",
+    "nd_file",
+    "nd_collection",
+    "nd_project",
+]
 
 __author__ = "Lawrence Borst"
 __email__ = "laurens.s.borst@gmail.com"
