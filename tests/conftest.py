@@ -1,1 +1,1 @@
-from tests.fixtures.get_project import project  # noqa: F401
+from tests.fixtures.get_plugin import plugin  # noqa: F401

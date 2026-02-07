@@ -1,10 +1,10 @@
-"""N-dimensional file node helpers.
+"""N-dimensional project node helpers.
 
-This module defines :class:`NDHoneyFile`, a typing-friendly abstraction for
-files whose children are tuples of heterogeneous values (for example a file
-whose rows are pairs, triples, etc.). ``TypeVarTuple`` is used to express the
+This module defines :class:`NDHoneyProject`, a typing-friendly abstraction for
+projects whose children are tuples of heterogeneous collections (for example a project
+whose children are subfolders etc.) ``TypeVarTuple`` is used to express the
 variable arity of children via ``Ts = TypeVarTuple('Ts')`` and the class is
-parameterized as ``NDHoneyFile[Unpack[Ts]]``.
+parameterized as ``NDHoneyProject[Unpack[Ts]]``.
 
 Runtime behaviour is provided by :class:`honeypy.metagraph.meta.honey_node.HoneyNode`.
 This module focuses on typing helpers and a small ND-aware convenience API.
@@ -25,17 +25,18 @@ from typing import (
     Unpack,
 )
 
+from honeypy.metagraph.honey_collection import HoneyCollection
 from honeypy.metagraph.meta.honey_node import HoneyNode
 
 if TYPE_CHECKING:
-    from honeypy.metagraph.honey_collection import HoneyFile
+    from honeypy.metagraph.honey_project import HoneyProject
 
-P = TypeVar("P")
+C = TypeVar("C", bound=HoneyCollection[Any])
 Ts = TypeVarTuple("Ts")
 
 
-class NDHoneyFile(HoneyNode, Generic[Unpack[Ts]]):
-    """Represents a single file node containing HoneyPoint[P] items.
+class NDHoneyProject(HoneyNode, Generic[Unpack[Ts]]):
+    """Represents a single project node containing HoneyCollection items.
 
     Parameters
     ----------
@@ -48,8 +49,6 @@ class NDHoneyFile(HoneyNode, Generic[Unpack[Ts]]):
     --------
     honeypy.metagraph.meta.honey_node.HoneyNode
         Base class that defines the load/unload/metadata contract.
-    honeypy.metagraph.honey_point.HoneyPoint
-        Lightweight wrapper type used for the points contained in the file.
     """
 
     @property
@@ -58,15 +57,15 @@ class NDHoneyFile(HoneyNode, Generic[Unpack[Ts]]):
         return super().children
 
     def pullback(
-        self: NDHoneyFile[Unpack[Ts]],
-        other: HoneyFile[P],
+        self: "NDHoneyProject[Unpack[Ts]]",
+        other: HoneyProject[C],
         map_1: Callable[[Tuple[Unpack[Ts]]], Any],
-        map_2: Callable[[P], Any],
-    ) -> NDHoneyFile[Unpack[Ts], P]:
-        """Perform a pullback (inner join) between this ND file and ``other``.
+        map_2: Callable[[C], Any],
+    ) -> "NDHoneyProject[Unpack[Ts], C]":
+        """Perform a pullback (inner join) between this ND project and ``other``.
 
-        Both files are loaded when needed. ``map_1`` is applied to each tuple
-        child of this file and ``map_2`` to each child (or tuple) of ``other``;
+        Both projects are loaded when needed. ``map_1`` is applied to each tuple
+        child of this project and ``map_2`` to each child (or tuple) of ``other``;
         items whose mapped keys compare equal are paired. The joined children
         are tuples whose arity reflects the dimensionality of the operands.
 
@@ -75,6 +74,6 @@ class NDHoneyFile(HoneyNode, Generic[Unpack[Ts]]):
         """
         return super().pullback(other, map_1, map_2)
 
-    def __iter__(self: NDHoneyFile[Unpack[Ts]]) -> Iterator[Tuple[Unpack[Ts]]]:
+    def __iter__(self: "NDHoneyProject[Unpack[Ts]]") -> Iterator[Tuple[Unpack[Ts]]]:
         """Call super().__iter__."""
         return super().__iter__()

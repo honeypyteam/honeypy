@@ -9,8 +9,6 @@ Exports
 -------
 HoneyNode
     Abstract base class providing load/unload/metadata and child management.
-SupportsLoad
-    Structural Protocol describing the minimal operations expected of children.
 """
 
 from .honey_node import HoneyNode
