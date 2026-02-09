@@ -10,6 +10,7 @@ from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import (
     Any,
+    Callable,
     Iterable,
     Iterator,
     Mapping,
@@ -182,24 +183,21 @@ class HoneyNode(ABC):
         if not other._loaded:
             other.load()
 
-        index: dict[Any, list[Any]] = {}
-        for other_child in other._children:
-            try:
-                key = map_2(other_child)
-            except Exception as e:
-                print(f"Problem mapping other child {other_child!r}: {e!r}")
-                continue
-            index.setdefault(key, []).append(other_child)
+        if map_2 is None:
+            return self._pullback_predicate(other, map_1)
 
-        joined: set[tuple[Any, Any]] = set()
-        for self_child in self._children:
-            try:
-                key = map_1(self_child)
-            except Exception as e:
-                print(f"Problem mapping self child {self_child!r}: {e!r}")
-                continue
-            for match in index.get(key, []):
-                joined.add((self_child, match))
+        return self._pullback_projection(other, map_1, map_2)
+
+    def _pullback_predicate(
+        self, other: "HoneyNode", predicate: Callable[[Any, Any], bool]
+    ) -> "HoneyNode":
+        """Perform a pullback by using a predicate over points from two domains."""
+        joined = set()
+
+        for self_child in self:
+            for other_child in other:
+                if predicate(self_child, other_child):
+                    joined.add((self_child, other_child))
 
         class _JoinNode(HoneyNode):
             # TODO: refactor to not require the join node
@@ -217,7 +215,47 @@ class HoneyNode(ABC):
             def _load_metadata(self) -> Metadata:
                 return self._metadata
 
-        # Instantiate and return the join node
+        return _JoinNode(self._location, joined, metadata={})
+
+    def _pullback_projection(
+        self, other: "HoneyNode", map_1: Callable, map_2: Callable
+    ) -> "HoneyNode":
+        """Perform a pullback by using two functions with a common codomain."""
+        index: dict[Any, list[Any]] = {}
+        for child in other:
+            try:
+                key = map_2(child)
+            except Exception as e:
+                print(f"Problem mapping other child {child!r}: {e!r}")
+                continue
+            index.setdefault(key, []).append(child)
+
+        joined: set[tuple[Any, Any]] = set()
+        for child in self:
+            try:
+                key = map_1(child)
+            except Exception as e:
+                print(f"Problem mapping self child {child!r}: {e!r}")
+                continue
+            for match in index.get(key, []):
+                joined.add((child, match))
+
+        class _JoinNode(HoneyNode):
+            # TODO: refactor to not require the join node
+            def __init__(self, location, children, metadata=None):
+                super().__init__(location, load=False, metadata=metadata or {})
+                self._children = set(children)
+                self._loaded = True
+
+            def _load(self) -> Iterable[Any]:
+                return self._children
+
+            def _unload(self) -> None:
+                self._children = set()
+
+            def _load_metadata(self) -> Metadata:
+                return self._metadata
+
         return _JoinNode(self._location, joined, metadata={})
 
     @property

@@ -19,11 +19,11 @@ Behaviour
 """
 
 from typing import (
-    Any,
     Callable,
     Generic,
     Iterable,
     Iterator,
+    Optional,
     Tuple,
     TypeVar,
     TypeVarTuple,
@@ -34,6 +34,7 @@ from typing import (
 from honeypy.metagraph.meta.honey_node import HoneyNode
 from honeypy.metagraph.nd_file import NDHoneyFile
 
+K = TypeVar("K")
 P = TypeVar("P", covariant=True)
 P2 = TypeVar("P2", covariant=True)
 Ts = TypeVarTuple("Ts")
@@ -66,33 +67,90 @@ class HoneyFile(HoneyNode, Generic[P]):
     def pullback(
         self: "HoneyFile[P]",
         other: NDHoneyFile[Unpack[Ts]],
-        map_1: Callable[[P], Any],
-        map_2: Callable[[Tuple[Unpack[Ts]]], Any],
+        map_1: Callable[[P], K],
+        map_2: Callable[[Tuple[Unpack[Ts]]], K],
+    ) -> NDHoneyFile[P, Unpack[Ts]]: ...
+
+    @overload
+    def pullback(
+        self: "HoneyFile[P]",
+        other: NDHoneyFile[Unpack[Ts]],
+        map_1: Callable[[P, Tuple[Unpack[Ts]]], bool],
     ) -> NDHoneyFile[P, Unpack[Ts]]: ...
 
     @overload
     def pullback(
         self: "HoneyFile[P]",
         other: "HoneyFile[P2]",
-        map_1: Callable[[P], Any],
-        map_2: Callable[[P2], Any],
+        map_1: Callable[[P], K],
+        map_2: Callable[[P2], K],
+    ) -> NDHoneyFile[P, P2]: ...
+
+    @overload
+    def pullback(
+        self: "HoneyFile[P]",
+        other: "HoneyFile[P2]",
+        map_1: Callable[[P, P2], bool],
     ) -> NDHoneyFile[P, P2]: ...
 
     def pullback(
-        self, other: object, map_1: Callable[..., Any], map_2: Callable[..., Any]
-    ) -> Any:
+        self, other: "HoneyNode", map_1: Callable, map_2: Optional[Callable] = None
+    ) -> "HoneyNode":
         """Perform a pullback (inner join) between this file and ``other``.
 
-        Both files are loaded when needed. ``map_1`` is applied to each
-        child of this file and ``map_2`` to each child (or tuple) of ``other``;
-        items whose mapped keys compare equal are paired. The joined children
-        are tuples whose arity reflects the dimensionality of the operands.
+        Supported call forms
+        --------------------
+        1) Key-mapper form (recommended / efficient)
+           - Signature: pullback(other, map_1, map_2)
+           - map_1: Callable[[P], K]
+           - map_2: Callable[[P2], K]  (or Callable[[Tuple[Unpack[Ts]]], K] for ND)
+           - Behaviour: computes keys for each side and performs a hash-based
+             join (O(N + M) expected). Prefer this for large inputs when you
+             can extract a comparable, hashable key.
 
-        Static overloads in the package express precise ND shapes; at runtime
-        a lightweight in-memory node containing the joined tuples is returned.
+            Example:
+                def map_a(row_a: RowA) -> int:
+                    return row_a.value
+                def map_b(row_b: RowB) -> int:
+                    return row_b.value
+                joined = file_a.pullback(file_b, map_a, map_b)
+                for a, b in joined:
+                    # `a` has type RowA, `b` has type RowB
+                    ...
+
+        2) Predicate form (easy / potentially expensive)
+           - Signature: pullback(other, predicate)
+           - predicate: Callable[[P, P2], bool]  (or Callable[[P, Tuple[Unpack[Ts]]],
+             bool])
+           - Behaviour: evaluates predicate(a, b) for candidate pairs and yields
+             pairs where it returns True. This implements a general join but may
+             be O(N * M) and should be used for small collections or when no
+             obvious key exists.
+
+            Example:
+                from datetime import timedelta
+                def near_time(a: RowA, b: RowB) -> bool:
+                    return abs(a.timestamp - b.timestamp) < timedelta(minutes=1)
+                joined = file_a.pullback(file_b, near_time)
+                for a, b in joined:
+                    ...
+
+        Runtime behaviour
+        -----------------
+        - Files are loaded on demand if not already loaded.
+        - The method returns a lightweight ND node containing the joined tuples;
+          static overloads in the module provide precise typing for callers.
+        - If you need predicate semantics but want better performance, provide
+          an auxiliary key-extractor (outside this API) to allow a hash-join.
+
+        Notes
+        -----
+        - Document the expected complexity for each form; callers should prefer
+          the key-mapper form for scale.
+        - Implementations should catch and surface exceptions raised by user
+          mappers/predicates with useful diagnostics.
         """
-        result = super().pullback(other, map_1, map_2)
-        return result
+        return super().pullback(other, map_1, map_2)
 
     def __iter__(self: "HoneyFile[P]") -> Iterator[P]:
         """Call super().__iter__."""

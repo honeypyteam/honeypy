@@ -29,10 +29,12 @@ from typing import (
     Generic,
     Iterable,
     Iterator,
+    Optional,
     Tuple,
     TypeVar,
     TypeVarTuple,
     Unpack,
+    overload,
 )
 
 from honeypy.metagraph.honey_file import HoneyFile
@@ -41,6 +43,7 @@ from honeypy.metagraph.meta.honey_node import HoneyNode
 if TYPE_CHECKING:
     from honeypy.metagraph.honey_collection import HoneyCollection
 
+K = TypeVar("K")
 F = TypeVar("F", bound=HoneyFile[Any])
 Ts = TypeVarTuple("Ts")
 
@@ -70,21 +73,78 @@ class NDHoneyCollection(HoneyNode, Generic[Unpack[Ts]]):
     # TODO: overload? Can't have multiple variadic types
     # but could reasonably overload, say, 2 or 3 times. Also in nd_file and co.
     # unsure if overloading will give us much, though
+    @overload
     def pullback(
         self: "NDHoneyCollection[Unpack[Ts]]",
         other: HoneyCollection[F],
-        map_1: Callable[[Tuple[Unpack[Ts]]], Any],
-        map_2: Callable[[F], Any],
-    ) -> "NDHoneyCollection[Unpack[Ts], F]":
+        map_1: Callable[[Tuple[Unpack[Ts]]], K],
+        map_2: Callable[[F], K],
+    ) -> "NDHoneyCollection[Unpack[Ts], F]": ...
+
+    @overload
+    def pullback(
+        self: "NDHoneyCollection[Unpack[Ts]]",
+        other: HoneyCollection[F],
+        map_1: Callable[[Tuple[Unpack[Ts]], F], bool],
+    ) -> "NDHoneyCollection[Unpack[Ts], F]": ...
+
+    def pullback(
+        self, other: "HoneyNode", map_1: Callable, map_2: Optional[Callable] = None
+    ) -> "HoneyNode":
         """Perform a pullback (inner join) between this collection and ``other``.
 
-        Both collections are loaded when needed. ``map_1`` is applied to each tuple
-        child of this collection and ``map_2`` to each child (or tuple) of ``other``;
-        items whose mapped keys compare equal are paired. The joined children
-        are tuples whose arity reflects the dimensionality of the operands.
+        Supported call forms
+        --------------------
+        1) Key-mapper form (recommended / efficient)
+           - Signature: pullback(other, map_1, map_2)
+           - map_1: Callable[[Tuple[Unpack[Ts]]], K]
+           - map_2: Callable[[F], K]
+           - Behaviour: computes keys for each side and performs a hash-based
+             join (O(N + M) expected). Prefer this for large inputs when you
+             can extract a comparable, hashable key.
 
-        Static overloads in the package express precise ND shapes; at runtime
-        a lightweight in-memory node containing the joined tuples is returned.
+            Example:
+                def map_a(file_a: Tuple[FileAA, FileAB]) -> str:
+                    return file_a.stem
+                def map_b(file_b: FileB) -> str:
+                    return file_b.stem
+                joined = collection_a.pullback(collection_b, map_a, map_b)
+                for (a_1, a_2), b in joined:
+                    # `(a_1, a_2)` has type Tuple[FileAA, FileAB), `b` has type FileB
+                    ...
+
+        2) Predicate form (easy / potentially expensive)
+           - Signature: pullback(other, predicate)
+           - predicate: Callable[[Tuple[Unpack[Ts]], F], bool]
+           - Behaviour: evaluates predicate(a, b) for candidate pairs and yields
+             pairs where it returns True. This implements a general join but may
+             be O(N * M) and should be used for small collections or when no
+             obvious key exists.
+
+            Example:
+                from datetime import timedelta
+                def near_time(a: Tuple[FileAA, FileAB], b: FileB) -> bool:
+                    return abs(
+                        a[0].created_time - b.created_time
+                    ) < timedelta(minutes=1)
+                joined = collection_a.pullback(collection_b, near_time)
+                for (a_1, a_2), b in joined:
+                    ...
+
+        Runtime behaviour
+        -----------------
+        - Collections are loaded on demand if not already loaded.
+        - The method returns a lightweight ND node containing the joined tuples;
+          static overloads in the module provide precise typing for callers.
+        - If you need predicate semantics but want better performance, provide
+          an auxiliary key-extractor (outside this API) to allow a hash-join.
+
+        Notes
+        -----
+        - Document the expected complexity for each form; callers should prefer
+          the key-mapper form for scale.
+        - Implementations should catch and surface exceptions raised by user
+          mappers/predicates with useful diagnostics.
         """
         return super().pullback(other, map_1, map_2)
 

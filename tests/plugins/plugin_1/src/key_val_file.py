@@ -34,7 +34,7 @@ class KeyValFile(HoneyFile[KeyValPoint[T]], Generic[T]):
     def _unload(self) -> None:
         return
 
-    def _convert(self, _: str) -> T:
+    def _convert(self, value: str) -> T:
         raise NotImplementedError
 
 
