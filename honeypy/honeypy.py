@@ -8,6 +8,10 @@ domain-specific functionality while maintaining a consistent interface.
 import uuid
 from abc import ABC, abstractmethod
 
+import click
+
+from importlib.metadata import entry_points
+
 
 class HoneyPy(ABC):
     """An abstract base class for creating research data management plugins.
@@ -26,8 +30,7 @@ class HoneyPy(ABC):
 
         Returns
         -------
-            uuid.UUID: A unique identifier for this plugin (e.g., 'linguistics_nlp',
-                'medical_imaging').
+            uuid.UUID: A unique UUID identifier for this plugin.
 
         Note:
             This identifier should never, ever be changed once published,
@@ -59,3 +62,37 @@ class HoneyPy(ABC):
                 'audio-processor', 'mip').
         """
         raise NotImplementedError
+    
+    @property
+    def cli_group(self) -> click.Group:
+        """Build a click.Group for this plugin with default subcommands."""
+        name = self.cli_name()
+        grp = click.Group(name=name, help=self.package_name())
+
+        @click.group(name="collection")
+        def collection_group():
+            """Operations on collections"""
+
+        @collection_group.command("ls")
+        def _collection_ls_cmd():
+            click.echo("test collection")
+
+        grp.add_command(collection_group)
+
+        @click.group(name="file")
+        def file_group():
+            """Operations on files"""
+
+        @file_group.command("ls")
+        def _files_ls_cmd():
+            click.echo("test file")
+
+        grp.add_command(file_group)
+
+        return grp
+
+
+@click.command()
+def run():
+    """HoneyPy plugin runner"""
+    click.echo("Hello World!")
