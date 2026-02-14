@@ -1,12 +1,18 @@
-from datetime import datetime, timezone
+from uuid import UUID
 
+from honeypy.metagraph.meta.virtual_node import VirtualNode
 from tests.fixtures.get_plugin import PluginGetter
 from tests.plugins.plugin_1.src.key_val_collection import KeyIntCollection
 
 
-def test_honey_collection(plugin: PluginGetter):
-    location = plugin("plugin_1", copy=False) / "project" / "collection_1"
-    collection = KeyIntCollection(location=location, load=True)
+def test_honey_collection_using_metadata(plugin: PluginGetter):
+    location = plugin("plugin_1", copy=True) / "project"
+
+    project = VirtualNode(location=location)
+
+    collection = KeyIntCollection(
+        project, load=True, uuid=UUID("17c5a2df-8ab9-40f3-92d0-a3e6aabb2b98")
+    )
 
     assert collection.loaded
 
@@ -15,19 +21,12 @@ def test_honey_collection(plugin: PluginGetter):
         for file in collection
         for key, value in {point.value for point in file}
     } == {
-        ("1_1.csv", "a", 1),
-        ("1_1.csv", "b", 3),
-        ("1_1.csv", "c", 9),
-        ("1_1.csv", "d", 4),
-        ("1_2.csv", "a", 2),
-        ("1_2.csv", "b", 4),
-        ("1_2.csv", "c", 9),
-        ("1_2.csv", "d", 8),
-    }
-
-    assert collection.metadata == {
-        "title": "collection 1",
-        "description": "collection of key value files in the 1-10 range",
-        "created_at": datetime(2026, 3, 4, 12, 0, tzinfo=timezone.utc),
-        "created_by": "test user 1",
+        ("1_1.csv", "a", 11),
+        ("1_1.csv", "b", 53),
+        ("1_1.csv", "c", 28),
+        ("1_1.csv", "d", 54),
+        ("1_2.csv", "a", 10),
+        ("1_2.csv", "b", 51),
+        ("1_2.csv", "c", 20),
+        ("1_2.csv", "d", 24),
     }

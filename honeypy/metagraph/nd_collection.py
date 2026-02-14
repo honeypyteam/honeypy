@@ -21,21 +21,16 @@ ND shapes.
 """
 
 from typing import (
-    Any,
     Generic,
     Iterable,
     Iterator,
     Tuple,
-    TypeVar,
     TypeVarTuple,
     Unpack,
 )
 
-from honeypy.metagraph.honey_file import HoneyFile
 from honeypy.metagraph.meta.honey_node import HoneyNode
 
-K = TypeVar("K")
-F = TypeVar("F", bound=HoneyFile[Any])
 Ts = TypeVarTuple("Ts")
 
 

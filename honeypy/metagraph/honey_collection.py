@@ -19,16 +19,12 @@ from typing import (
     Iterable,
     Iterator,
     TypeVar,
-    TypeVarTuple,
 )
 
 from honeypy.metagraph.honey_file import HoneyFile
 from honeypy.metagraph.meta.honey_node import HoneyNode
 
-K = TypeVar("K")
 F = TypeVar("F", bound=HoneyFile[Any], covariant=True)
-F2 = TypeVar("F2", bound=HoneyFile[Any], covariant=True)
-Ts = TypeVarTuple("Ts")
 
 
 class HoneyCollection(HoneyNode, Generic[F]):

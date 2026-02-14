@@ -11,21 +11,16 @@ This module focuses on typing helpers and a small ND-aware convenience API.
 """
 
 from typing import (
-    Any,
     Generic,
     Iterable,
     Iterator,
     Tuple,
-    TypeVar,
     TypeVarTuple,
     Unpack,
 )
 
-from honeypy.metagraph.honey_collection import HoneyCollection
 from honeypy.metagraph.meta.honey_node import HoneyNode
 
-K = TypeVar("K")
-C = TypeVar("C", bound=HoneyCollection[Any])
 Ts = TypeVarTuple("Ts")
 
 

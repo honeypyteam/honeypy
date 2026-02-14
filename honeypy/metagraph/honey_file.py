@@ -18,23 +18,25 @@ Behaviour
   when you need heterogeneous collections; prefer factory helpers to avoid casts.
 """
 
+from abc import ABC, abstractmethod
+from pathlib import Path
 from typing import (
+    Any,
+    Dict,
     Generic,
     Iterable,
     Iterator,
+    Set,
     TypeVar,
-    TypeVarTuple,
 )
+from uuid import UUID
 
 from honeypy.metagraph.meta.honey_node import HoneyNode
 
-K = TypeVar("K")
 P = TypeVar("P", covariant=True)
-P2 = TypeVar("P2", covariant=True)
-Ts = TypeVarTuple("Ts")
 
 
-class HoneyFile(HoneyNode, Generic[P]):
+class HoneyFile(HoneyNode, Generic[P], ABC):
     """Represents a single file node containing HoneyPoint[P] items.
 
     Parameters
@@ -56,6 +58,19 @@ class HoneyFile(HoneyNode, Generic[P]):
     def children(self) -> Iterable[P]:
         """Iterable[P]: Live iterable view of the node's children."""
         return super().children
+
+    # Override load, since there is no children metadata
+    # TODO: can we avoid type ignoring?
+    def _load(  # type: ignore
+        self,
+        raw_children_metadata: Dict[UUID, Any] = {},
+    ) -> Iterable[P]:
+        return self._load_file(self.location)
+
+    @staticmethod
+    @abstractmethod
+    def _load_file(location: Path) -> Set[P]:
+        raise NotImplementedError
 
     def __iter__(self: "HoneyFile[P]") -> Iterator[P]:
         """Call super().__iter__."""

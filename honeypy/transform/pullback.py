@@ -28,6 +28,7 @@ from pathlib import Path
 from typing import (
     Any,
     Callable,
+    Dict,
     Iterable,
     Optional,
     Tuple,
@@ -36,10 +37,11 @@ from typing import (
     Unpack,
     overload,
 )
+from uuid import UUID
 
 from honeypy.metagraph.honey_collection import HoneyCollection
 from honeypy.metagraph.honey_file import HoneyFile
-from honeypy.metagraph.meta.honey_node import HoneyNode
+from honeypy.metagraph.meta.honey_node import HoneyNode, Metadata
 from honeypy.metagraph.nd_collection import NDHoneyCollection
 from honeypy.metagraph.nd_file import NDHoneyFile
 from honeypy.transform.meta.honey_transform import HoneyTransform
@@ -259,22 +261,39 @@ class Pullback(HoneyTransform):
                     joined.add((self_child, other_child))
 
         class _JoinNode(HoneyNode):
-            # TODO: refactor to not require the join node
-            def __init__(self, location, children, metadata=None):
-                super().__init__(location, load=False, metadata=metadata or {})
+            # TODO: refactor to not require the join node. Need to do a lot of work here
+            def __init__(self, children, metadata=None):
+                super().__init__(
+                    node_1._principal_parent, load=False, metadata=metadata or {}
+                )
                 self._children = set(children)
                 self._loaded = True
 
-            def _load(self) -> Iterable[Any]:
+            def _load(
+                self, raw_children_metadata: Dict[UUID, Any] = {}
+            ) -> Iterable[Any]:
                 return self._children
 
             def _unload(self) -> None:
                 self._children = set()
 
-            def _load_metadata(self) -> Any:
-                return self._metadata
+            # TODO: Think about how to combine metadata
+            # Likely add as generic on HoneyNode. Makes it easier to union for instance
+            @staticmethod
+            def _parse_metadata(raw_metadata: Any) -> Any:
+                return {}
 
-        return _JoinNode(Path("."), joined, metadata={})
+            @staticmethod
+            def _serialise_metadata(metadata: Any) -> Any:
+                return {}
+
+            @staticmethod
+            def _locator(
+                parent_location: Path, metadata: Optional[Metadata] = None
+            ) -> Path:
+                return Path(".")
+
+        return _JoinNode(joined, metadata={})
 
     def _pullback_projection(
         self, node_1: HoneyNode, node_2: HoneyNode, map_1: Callable, map_2: Callable
@@ -300,19 +319,36 @@ class Pullback(HoneyTransform):
                 joined.add((child, match))
 
         class _JoinNode(HoneyNode):
-            # TODO: refactor to not require the join node
-            def __init__(self, location, children, metadata=None):
-                super().__init__(location, load=False, metadata=metadata or {})
+            # TODO: refactor to not require the join node. Need to do a lot of work here
+            def __init__(self, children, metadata=None):
+                super().__init__(
+                    node_1._principal_parent, load=False, metadata=metadata or {}
+                )
                 self._children = set(children)
                 self._loaded = True
 
-            def _load(self) -> Iterable[Any]:
+            def _load(
+                self, raw_children_metadata: Dict[UUID, Any] = {}
+            ) -> Iterable[Any]:
                 return self._children
 
             def _unload(self) -> None:
                 self._children = set()
 
-            def _load_metadata(self) -> Any:
-                return self._metadata
+            # TODO: Think about how to combine metadata
+            # Likely add as generic on HoneyNode. Makes it easier to union for instance
+            @staticmethod
+            def _parse_metadata(raw_metadata: Any) -> Any:
+                return {}
 
-        return _JoinNode(Path("."), joined, metadata={})
+            @staticmethod
+            def _serialise_metadata(metadata: Any) -> Any:
+                return {}
+
+            @staticmethod
+            def _locator(
+                parent_location: Path, metadata: Optional[Metadata] = None
+            ) -> Path:
+                return Path(".")
+
+        return _JoinNode(joined, metadata={})

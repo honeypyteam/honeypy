@@ -15,15 +15,12 @@ from typing import (
     Iterable,
     Iterator,
     Tuple,
-    TypeVar,
     TypeVarTuple,
     Unpack,
 )
 
 from honeypy.metagraph.meta.honey_node import HoneyNode
 
-K = TypeVar("K")
-P = TypeVar("P")
 Ts = TypeVarTuple("Ts")
 
 
