@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.6.0](https://github.com/honeypyteam/honeypy/compare/v0.5.0...v0.6.0) (2026-02-15)
+
+
+### Features
+
+* metadata-based file discovery ([ebccf3d](https://github.com/honeypyteam/honeypy/commit/ebccf3dd93df6c10206291f0550524dfaf58f25d))
+
 ## [0.5.0](https://github.com/honeypyteam/honeypy/compare/v0.4.0...v0.5.0) (2026-02-07)
 
 
