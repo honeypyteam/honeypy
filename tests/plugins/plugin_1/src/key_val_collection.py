@@ -1,57 +1,102 @@
 from datetime import datetime
-from typing import Any, Dict, Generic, Iterable, Type, TypedDict, TypeVar
-
-import yaml
+from pathlib import Path
+from typing import (
+    Any,
+    Generic,
+    Literal,
+    Optional,
+    Type,
+    TypedDict,
+    TypeVar,
+)
+from uuid import UUID
 
 from honeypy.metagraph.honey_collection import HoneyCollection
 from honeypy.metagraph.honey_file import HoneyFile
+from honeypy.metagraph.meta.honey_node import HoneyNode
 from tests.plugins.plugin_1.src.key_val_file import KeyIntFile, KeyStrFile
 
 
-class MetaData(TypedDict):
+class Metadata(TypedDict):
+    folder_name: str
     title: str
     description: str
     created_at: datetime
     created_by: str
+    collection_type: Literal["int collection", "str collection"]
 
 
 T = TypeVar("T", bound=HoneyFile[Any])
 
 
 class KeyValCollection(HoneyCollection[T], Generic[T]):
-    def _load(self) -> Iterable[T]:
-        return {
-            self._get_class()(f, load=True, principal_parent=self)
-            for f in self._location.iterdir()
-            if f.is_file() and f.suffix == ".csv"
-        }
+    def __init__(
+        self,
+        principal_parent: HoneyNode,
+        *,
+        metadata: Optional[Metadata] = None,
+        load: bool = False,
+        uuid: Optional[UUID] = None,
+    ):
+        super().__init__(principal_parent, metadata=metadata, load=load, uuid=uuid)
 
     def _unload(self) -> None:
         for child in self._children:
             child.unload()
 
-    def _load_metadata(self) -> MetaData:
-        meta_file = self._location / ".metadata"
-
-        raw: Dict[str, Any] = yaml.safe_load(meta_file.read_text(encoding="utf-8"))
-        created_at = datetime.fromisoformat(str(raw.get("created_at", "")))
-
+    @staticmethod
+    def _parse_metadata(raw_metadata: Any) -> Metadata:
         return {
-            "title": str(raw.get("title", "")),
-            "description": str(raw.get("description", "")),
-            "created_at": created_at,
-            "created_by": str(raw.get("created_by", "")),
+            "folder_name": raw_metadata["folder_name"],
+            "collection_type": raw_metadata["collection_type"],
+            "title": raw_metadata["title"],
+            "description": raw_metadata["description"],
+            "created_at": datetime.fromisoformat(raw_metadata["created_at"]),
+            "created_by": raw_metadata["created_by"],
         }
 
     def _get_class(self) -> Any:
         raise NotImplementedError
 
+    @staticmethod
+    def _locator(
+        parent_location: Path,
+        metadata: Metadata,
+    ) -> Path:
+        return parent_location / metadata["folder_name"]
+
 
 class KeyIntCollection(KeyValCollection[KeyIntFile]):
+    CLASS_UUID = UUID("2aab4e79-abde-4cd8-9559-aa1d3dcea56e")
+
     def _get_class(self) -> Type[KeyIntFile]:
         return KeyIntFile
 
+    @staticmethod
+    def _serialise_metadata(metadata: Metadata) -> Any:
+        return {
+            "folder_name": metadata["folder_name"],
+            "title": metadata["title"],
+            "description": metadata["description"],
+            "created_at": metadata["created_at"].isoformat(),
+            "created_by": metadata["created_by"],
+            "collection_type": "int collection",
+        }
+
 
 class KeyStrCollection(KeyValCollection[KeyStrFile]):
+    CLASS_UUID = UUID("35f33923-cd77-4ba1-95b9-654611846dcf")
+
     def _get_class(self) -> Type[KeyStrFile]:
         return KeyStrFile
+
+    @staticmethod
+    def _serialise_metadata(metadata: Metadata) -> Any:
+        return {
+            "folder_name": metadata["folder_name"],
+            "title": metadata["title"],
+            "description": metadata["description"],
+            "created_at": metadata["created_at"].isoformat(),
+            "created_by": metadata["created_by"],
+            "collection_type": "str collection",
+        }

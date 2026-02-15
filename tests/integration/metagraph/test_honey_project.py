@@ -1,5 +1,6 @@
 from typing import TypeGuard
 
+from honeypy.metagraph.meta.virtual_node import VirtualNode
 from tests.fixtures.get_plugin import PluginGetter
 from tests.plugins.plugin_1.src.key_val_collection import (
     KeyIntCollection,
@@ -8,18 +9,14 @@ from tests.plugins.plugin_1.src.key_val_project import KeyValProject, KeyVarColl
 
 
 def is_key_int_collection(col: KeyVarCollections) -> TypeGuard[KeyIntCollection]:
-    # TODO: well, title is probably not the best test
-    # for this. Probably want to add better metadata for
-    # to encapsulate what kind of collection it is
     return col.metadata.get("title") == "collection 1"
 
 
-def test_honey_project_load(plugin: PluginGetter):
-    path = plugin("plugin_1", copy=False) / "project"
+def test_honey_project_load_using_metadata(plugin: PluginGetter):
+    path = plugin("plugin_1", copy=True) / "project"
+    top_most_node = VirtualNode(path)
 
-    project = KeyValProject(location=path, load=True)
-
-    project.load()
+    project = KeyValProject(top_most_node, load=True)
 
     assert {col.metadata["title"] for col in project} == {
         "collection 1",

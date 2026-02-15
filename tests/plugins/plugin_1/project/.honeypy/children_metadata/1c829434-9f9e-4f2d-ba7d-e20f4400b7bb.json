@@ -1,0 +1,11 @@
+{
+    "class_uuid": "2aab4e79-abde-4cd8-9559-aa1d3dcea56e",
+    "data": {
+        "folder_name": "collection_1",
+        "title": "collection 1",
+        "description": "mixed collection of int and str values",
+        "created_at": "2026-02-14T12:00:00Z",
+        "created_by": "Lawrence",
+        "collection_type": "int collection"
+    }
+}

@@ -1,4 +1,6 @@
-from typing import Generic, List, Set, TypedDict, TypeVar
+from pathlib import Path
+from typing import Any, Generic, Set, TypedDict, TypeVar
+from uuid import UUID
 
 from honeypy.metagraph.honey_file import HoneyFile
 from tests.plugins.plugin_1.src.key_val_point import KeyValPoint
@@ -7,42 +9,55 @@ T = TypeVar("T")
 
 
 class Metadata(TypedDict):
-    columns: List[str]
     filename: str
 
 
 class KeyValFile(HoneyFile[KeyValPoint[T]], Generic[T]):
-    def _load(self) -> Set[KeyValPoint[T]]:
-        pts: Set[KeyValPoint[T]] = set()
+    def _unload(self) -> None:
+        return
 
-        with self._location.open("r", encoding="utf-8") as fh:
+    @staticmethod
+    def _parse_metadata(raw_metadata: Any) -> Metadata:
+        return {"filename": str(raw_metadata["filename"])}
+
+    @staticmethod
+    def _serialise_metadata(metadata: Metadata) -> Any:
+        return {k: str(v) for k, v in metadata.items()}
+
+    @staticmethod
+    def _locator(parent_location: Path, metadata: Metadata) -> Path:
+        return parent_location / metadata["filename"]
+
+
+class KeyIntFile(KeyValFile[int]):
+    CLASS_UUID = UUID("a1c9bef2-846c-4003-a357-3639628d6d13")
+
+    @staticmethod
+    def _load_file(location: Path) -> Set[KeyValPoint[int]]:
+        pts: Set[KeyValPoint[int]] = set()
+
+        with location.open("r", encoding="utf-8") as fh:
             next(fh)
 
             for line in fh:
                 key, val = line.split(",")
-                pts.add(KeyValPoint[T]((key, self._convert(val)), parents={self}))
+                pts.add(KeyValPoint[int]((key, int(val))))
 
         return pts
 
-    def _load_metadata(self) -> Metadata:
-        with self._location.open("r", encoding="utf-8") as fh:
-            line = next(fh)
-            cols = line.split(",")
-
-            return {"columns": cols, "filename": self._location.name}
-
-    def _unload(self) -> None:
-        return
-
-    def _convert(self, _: str) -> T:
-        raise NotImplementedError
-
-
-class KeyIntFile(KeyValFile[int]):
-    def _convert(self, value: str) -> int:
-        return int(value)
-
 
 class KeyStrFile(KeyValFile[str]):
-    def _convert(self, value: str) -> str:
-        return value
+    CLASS_UUID = UUID("45cd53b2-8d48-4f07-b560-3d0142a8d626")
+
+    @staticmethod
+    def _load_file(location: Path) -> Set[KeyValPoint[str]]:
+        pts: Set[KeyValPoint[str]] = set()
+
+        with location.open("r", encoding="utf-8") as fh:
+            next(fh)
+
+            for line in fh:
+                key, val = line.split(",")
+                pts.add(KeyValPoint[str]((key, str(val))))
+
+        return pts

@@ -6,19 +6,25 @@ lightweight metadata mapping. Concrete specialisations (files, collections,
 projects) implement the abstract loading and unloading behaviour.
 """
 
+import json
 from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import (
     Any,
+    Dict,
     Iterable,
     Iterator,
-    Mapping,
     Optional,
     Set,
+    Type,
     TypeAlias,
 )
+from uuid import UUID, uuid4
 
-Metadata: TypeAlias = Mapping[str, Any]
+Metadata: TypeAlias = Any
+
+# registry for auto-registered node classes keyed by CLASS_UUID
+_CLASS_REGISTRY: Dict[UUID, Type["HoneyNode"]] = {}
 
 
 class HoneyNode(ABC):
@@ -41,41 +47,61 @@ class HoneyNode(ABC):
         Optional initial metadata mapping for the node.
     """
 
+    # Kept in metadata and used in parent-child dynamic construction
+    CLASS_UUID: UUID
+
+    _uuid: UUID
+
     _children: Set[Any]
     _parents: Set["HoneyNode"]
-    _principal_parent: Optional["HoneyNode"]
+    _principal_parent: "HoneyNode"
     _loaded: bool
     _metadata: Metadata
-    _location: Path
 
     def __init__(
         self,
-        location: Path,
-        principal_parent: Optional["HoneyNode"] = None,
+        principal_parent: "HoneyNode",
         *,
         metadata: Optional[Metadata] = None,
         load: Optional[bool] = False,
+        load_metadata: Optional[bool] = True,
+        uuid: Optional[UUID] = None,
     ) -> None:
         """Create a new HoneyNode.
 
         The constructor initialises internal sets and optionally triggers a
         load operation when ``load`` is True.
         """
+        self._uuid = uuid or uuid4()
+
         self._children = set()
         self._parents = set()
-        self._principal_parent = None
         self._loaded = False
-        self._metadata = metadata or {}
-        self._location = location
 
-        if principal_parent is not None:
-            self._principal_parent = principal_parent
-            self._parents.add(principal_parent)
+        self._principal_parent = principal_parent
+        self._parents.add(principal_parent)
+        self._principal_parent.update([self])
+
+        if load_metadata and metadata is None:
+            metadata_file = HoneyNode._metadata_file(
+                self._principal_parent.location, self._uuid
+            )
+
+            if metadata_file.exists():
+                raw_metadata: Any
+                with open(metadata_file, "r") as fh:
+                    raw_metadata = json.load(fh)
+                self._metadata = self._parse_metadata(raw_metadata["data"])
+            else:
+                self._metadata = {}
+
+        if metadata is not None:
+            self._metadata = metadata
 
         if load:
             self.load()
 
-    def add(self, items: Iterable[Any]) -> None:
+    def update(self, items: Iterable[Any]) -> None:
         """Add children to the node.
 
         Parameters
@@ -100,14 +126,8 @@ class HoneyNode(ABC):
             return
 
         try:
-            self._metadata = self._load_metadata()
-        except Exception as e:
-            print(f"Problem loading metadata for {self!r}: {e!r}")
-            return
-
-        try:
-            new_children = self._load() or set()
-            self._children.update(new_children)
+            children = self._load(HoneyNode._get_raw_children_metadata(self.location))
+            self._children.update(children)
         except Exception as e:
             print(f"Problem loading children for {self!r}: {e!r}")
         finally:
@@ -133,93 +153,6 @@ class HoneyNode(ABC):
             self._children = set()
             self._loaded = False
 
-    def pullback(
-        self,
-        other,
-        map_1,
-        map_2,
-    ) -> Any:
-        """Compute the pullback (inner join) between this node and ``other``.
-
-        Both nodes are loaded if necessary. ``map_1`` is applied to each child of
-        ``self`` and ``map_2`` is applied to each child of ``other``; any pair of
-        children whose mapped keys compare equal are paired and included in the
-        result.
-
-        This method supports N-dimensional inputs. When joining an N-dimensional
-        node the joined children are tuples whose arity reflects the
-        dimensionality of the participants (for example joining a 1-D file with
-        an M-D file yields tuples of shape ``(self_item, *other_items)``). Callers
-        may express the other side with a ``TypeVarTuple`` (PEP 646) in overloads
-        to preserve precise static types.
-
-        Parameters
-        ----------
-        other
-            Node to join with. May be any HoneyNode-like object (1-D or ND).
-        map_1 : Callable
-            Function applied to children of this node to compute join keys.
-        map_2 : Callable
-            Function applied to children of ``other`` to compute join keys.
-
-        Returns
-        -------
-        HoneyNode
-            A loaded in-memory node whose children are tuples representing
-            matched items from the two inputs. Tuple shape depends on the
-            dimensionality of the operands.
-
-        Notes
-        -----
-        - Mapping errors are caught and logged; offending children are skipped.
-        - This is an inner join: only matched pairs are returned.
-        - Static typing is provided by overloads; the runtime result is a
-          lightweight in-memory node populated with the joined tuples.
-        """
-        if not self._loaded:
-            self.load()
-
-        if not other._loaded:
-            other.load()
-
-        index: dict[Any, list[Any]] = {}
-        for other_child in other._children:
-            try:
-                key = map_2(other_child)
-            except Exception as e:
-                print(f"Problem mapping other child {other_child!r}: {e!r}")
-                continue
-            index.setdefault(key, []).append(other_child)
-
-        joined: set[tuple[Any, Any]] = set()
-        for self_child in self._children:
-            try:
-                key = map_1(self_child)
-            except Exception as e:
-                print(f"Problem mapping self child {self_child!r}: {e!r}")
-                continue
-            for match in index.get(key, []):
-                joined.add((self_child, match))
-
-        class _JoinNode(HoneyNode):
-            # TODO: refactor to not require the join node
-            def __init__(self, location, children, metadata=None):
-                super().__init__(location, load=False, metadata=metadata or {})
-                self._children = set(children)
-                self._loaded = True
-
-            def _load(self) -> Iterable[Any]:
-                return self._children
-
-            def _unload(self) -> None:
-                self._children = set()
-
-            def _load_metadata(self) -> Metadata:
-                return self._metadata
-
-        # Instantiate and return the join node
-        return _JoinNode(self._location, joined, metadata={})
-
     @property
     def loaded(self) -> bool:
         """bool: True if the node has been loaded (metadata and children)."""
@@ -237,35 +170,73 @@ class HoneyNode(ABC):
 
     @property
     def location(self) -> Path:
-        """Path: Representative path of this node in the file system."""
-        return self._location
-
-    @abstractmethod
-    def _load(self) -> Iterable[Any]:
-        """Discover or construct the node's children.
-
-        Returns
-        -------
-        Iterable[Any]
-            Iterable of child objects. Implementations may return sets,
-            lists or generators.
         """
-        raise NotImplementedError
+        Path: A path chosen to represent the data's location.
+
+        The location is calculated through the `self._locator` and uses the
+        node's metadata and parent's location (if it exists)
+        """
+        if self._principal_parent is None:
+            raise ValueError("Cannot find location without a parent node")
+
+        return self._locator(self._principal_parent.location, self._metadata)
+
+    def _load(
+        self, raw_children_metadata: Dict[UUID, Any] = {}
+    ) -> Iterable["HoneyNode"]:
+        for uuid, raw_metadata in raw_children_metadata.items():
+            cls = _CLASS_REGISTRY[UUID(raw_metadata["class_uuid"])]
+
+            yield cls(self, metadata=raw_metadata["data"], load=True, uuid=uuid)
 
     @abstractmethod
     def _unload(self) -> None:
         """Free concrete resources for the node."""
         raise NotImplementedError
 
+    @staticmethod
+    def _metadata_file(parent_location: Path, id: UUID) -> Path:
+        return parent_location / ".honeypy" / "children_metadata" / f"{id!s}.json"
+
+    @staticmethod
+    def _get_raw_children_metadata(location: Path) -> Dict[UUID, Any]:
+        children_metadata_dir = location / ".honeypy" / "children_metadata"
+
+        if not children_metadata_dir.exists():
+            return {}
+
+        result = {}
+        for f in children_metadata_dir.iterdir():
+            uuid = UUID(f.stem)
+
+            with open(f, "r", encoding="utf-8") as fh:
+                all_metadata = json.load(fh)
+                result[uuid] = all_metadata
+
+        return result
+
+    @staticmethod
     @abstractmethod
-    def _load_metadata(self) -> Metadata:
-        """Load metadata for the node.
+    def _parse_metadata(raw_metadata: Any) -> Metadata:
+        """Read raw metadata for the node.
 
         Returns
         -------
-        Mapping[str, Any]
+        Metadata
             Metadata mapping attached to the node.
         """
+        raise NotImplementedError
+
+    @staticmethod
+    @abstractmethod
+    def _serialise_metadata(metadata: Metadata) -> Any:
+        """Serialise metadata for saving to a metadata file."""
+        raise NotImplementedError
+
+    @staticmethod
+    @abstractmethod
+    def _locator(parent_location: Path, metadata: Metadata) -> Path:
+        """Return the location of this node on the filesystem."""
         raise NotImplementedError
 
     def __len__(self) -> int:
@@ -281,3 +252,29 @@ class HoneyNode(ABC):
             Child objects contained by the node.
         """
         return iter(self._children)
+
+    def __eq__(self, other: Any) -> bool:
+        """Equality based on node id."""
+        return isinstance(other, HoneyNode) and self._uuid == other._uuid
+
+    def __hash__(self) -> int:
+        """Hash based on node id."""
+        return hash(self._uuid)
+
+    def __init_subclass__(cls, **kwargs) -> None:
+        """Auto-register concrete subclasses that define CLASS_UUID.
+
+        Subclasses that set CLASS_UUID: UUID will be registered into the
+        module registry at class-creation time. Abstract subclasses are
+        skipped so only concrete implementations are registered.
+        """
+        super().__init_subclass__(**kwargs)
+        class_uuid = getattr(cls, "CLASS_UUID", None)
+        if getattr(cls, "__abstractmethods__", False):
+            return
+        if class_uuid is None:
+            return
+        if not isinstance(class_uuid, UUID):
+            raise TypeError(f"{cls.__name__}.CLASS_UUID must be uuid.UUID")
+
+        _CLASS_REGISTRY[class_uuid] = cls

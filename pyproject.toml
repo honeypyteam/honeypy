@@ -9,7 +9,12 @@ license = {text = "MIT"}
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
+    "click (>=8.3.1,<9.0.0)"
 ]
+
+
+[project.scripts]
+honeypy = "honeypy.honeypy:run"
 
 
 [tool.poetry]

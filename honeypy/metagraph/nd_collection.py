@@ -20,28 +20,17 @@ are provided elsewhere in the package to help type-checkers reason about
 ND shapes.
 """
 
-from __future__ import annotations
-
 from typing import (
-    TYPE_CHECKING,
-    Any,
-    Callable,
     Generic,
     Iterable,
     Iterator,
     Tuple,
-    TypeVar,
     TypeVarTuple,
     Unpack,
 )
 
-from honeypy.metagraph.honey_file import HoneyFile
 from honeypy.metagraph.meta.honey_node import HoneyNode
 
-if TYPE_CHECKING:
-    from honeypy.metagraph.honey_collection import HoneyCollection
-
-F = TypeVar("F", bound=HoneyFile[Any])
 Ts = TypeVarTuple("Ts")
 
 
@@ -66,27 +55,6 @@ class NDHoneyCollection(HoneyNode, Generic[Unpack[Ts]]):
     def children(self) -> Iterable[Tuple[Unpack[Ts]]]:
         """Iterable[Tuple[Unpack[Ts]]]: Live iterable view of the node's children."""
         return super().children
-
-    # TODO: overload? Can't have multiple variadic types
-    # but could reasonably overload, say, 2 or 3 times. Also in nd_file and co.
-    # unsure if overloading will give us much, though
-    def pullback(
-        self: "NDHoneyCollection[Unpack[Ts]]",
-        other: HoneyCollection[F],
-        map_1: Callable[[Tuple[Unpack[Ts]]], Any],
-        map_2: Callable[[F], Any],
-    ) -> "NDHoneyCollection[Unpack[Ts], F]":
-        """Perform a pullback (inner join) between this collection and ``other``.
-
-        Both collections are loaded when needed. ``map_1`` is applied to each tuple
-        child of this collection and ``map_2`` to each child (or tuple) of ``other``;
-        items whose mapped keys compare equal are paired. The joined children
-        are tuples whose arity reflects the dimensionality of the operands.
-
-        Static overloads in the package express precise ND shapes; at runtime
-        a lightweight in-memory node containing the joined tuples is returned.
-        """
-        return super().pullback(other, map_1, map_2)
 
     def __iter__(self: "NDHoneyCollection[Unpack[Ts]]") -> Iterator[Tuple[Unpack[Ts]]]:
         """Call super().__iter__."""

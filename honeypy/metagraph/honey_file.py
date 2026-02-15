@@ -18,28 +18,25 @@ Behaviour
   when you need heterogeneous collections; prefer factory helpers to avoid casts.
 """
 
+from abc import ABC, abstractmethod
+from pathlib import Path
 from typing import (
     Any,
-    Callable,
+    Dict,
     Generic,
     Iterable,
     Iterator,
-    Tuple,
+    Set,
     TypeVar,
-    TypeVarTuple,
-    Unpack,
-    overload,
 )
+from uuid import UUID
 
 from honeypy.metagraph.meta.honey_node import HoneyNode
-from honeypy.metagraph.nd_file import NDHoneyFile
 
 P = TypeVar("P", covariant=True)
-P2 = TypeVar("P2", covariant=True)
-Ts = TypeVarTuple("Ts")
 
 
-class HoneyFile(HoneyNode, Generic[P]):
+class HoneyFile(HoneyNode, Generic[P], ABC):
     """Represents a single file node containing HoneyPoint[P] items.
 
     Parameters
@@ -62,37 +59,18 @@ class HoneyFile(HoneyNode, Generic[P]):
         """Iterable[P]: Live iterable view of the node's children."""
         return super().children
 
-    @overload
-    def pullback(
-        self: "HoneyFile[P]",
-        other: NDHoneyFile[Unpack[Ts]],
-        map_1: Callable[[P], Any],
-        map_2: Callable[[Tuple[Unpack[Ts]]], Any],
-    ) -> NDHoneyFile[P, Unpack[Ts]]: ...
+    # Override load, since there is no children metadata
+    # TODO: can we avoid type ignoring?
+    def _load(  # type: ignore
+        self,
+        raw_children_metadata: Dict[UUID, Any] = {},
+    ) -> Iterable[P]:
+        return self._load_file(self.location)
 
-    @overload
-    def pullback(
-        self: "HoneyFile[P]",
-        other: "HoneyFile[P2]",
-        map_1: Callable[[P], Any],
-        map_2: Callable[[P2], Any],
-    ) -> NDHoneyFile[P, P2]: ...
-
-    def pullback(
-        self, other: object, map_1: Callable[..., Any], map_2: Callable[..., Any]
-    ) -> Any:
-        """Perform a pullback (inner join) between this file and ``other``.
-
-        Both files are loaded when needed. ``map_1`` is applied to each
-        child of this file and ``map_2`` to each child (or tuple) of ``other``;
-        items whose mapped keys compare equal are paired. The joined children
-        are tuples whose arity reflects the dimensionality of the operands.
-
-        Static overloads in the package express precise ND shapes; at runtime
-        a lightweight in-memory node containing the joined tuples is returned.
-        """
-        result = super().pullback(other, map_1, map_2)
-        return result
+    @staticmethod
+    @abstractmethod
+    def _load_file(location: Path) -> Set[P]:
+        raise NotImplementedError
 
     def __iter__(self: "HoneyFile[P]") -> Iterator[P]:
         """Call super().__iter__."""
