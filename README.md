@@ -12,3 +12,5 @@ In doing so, it employs a functional approach; it sees data as something to be c
 It is not uncommon to see research teams reinvent the wheel in this regard. A centralised, general library is much more beneficial to us. Releases to the core should benefit all packages that inherit from it, and field-specific work, what some might call "application logic", should ideally be decoupled from data management.
 
 Every research team tackles its own questions, whether it be linguistics, medicine, sociology, or something else. It is the job of the core to automate the "boring" stuff, and the job of the plugin to perform the field-specific transformations.
+
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/honeypyteam/honeypy)
