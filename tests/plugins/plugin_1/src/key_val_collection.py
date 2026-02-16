@@ -26,10 +26,10 @@ class Metadata(TypedDict):
     collection_type: Literal["int collection", "str collection"]
 
 
-T = TypeVar("T", bound=HoneyFile[Any])
+T = TypeVar("T", bound=HoneyFile)
 
 
-class KeyValCollection(HoneyCollection[T], Generic[T]):
+class KeyValCollection(HoneyCollection[Metadata, T], Generic[T]):
     def __init__(
         self,
         principal_parent: HoneyNode,

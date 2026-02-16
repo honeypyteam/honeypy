@@ -21,10 +21,13 @@ ND shapes.
 """
 
 from typing import (
+    Any,
     Generic,
     Iterable,
     Iterator,
+    Mapping,
     Tuple,
+    TypeVar,
     TypeVarTuple,
     Unpack,
 )
@@ -32,9 +35,10 @@ from typing import (
 from honeypy.metagraph.meta.honey_node import HoneyNode
 
 Ts = TypeVarTuple("Ts")
+M = TypeVar("M", bound=Tuple[Mapping[str, Any], ...])
 
 
-class NDHoneyCollection(HoneyNode, Generic[Unpack[Ts]]):
+class NDHoneyCollection(Generic[M, Unpack[Ts]], HoneyNode[M]):
     """A collection of HoneyFile nodes.
 
     Parameters
@@ -56,6 +60,8 @@ class NDHoneyCollection(HoneyNode, Generic[Unpack[Ts]]):
         """Iterable[Tuple[Unpack[Ts]]]: Live iterable view of the node's children."""
         return super().children
 
-    def __iter__(self: "NDHoneyCollection[Unpack[Ts]]") -> Iterator[Tuple[Unpack[Ts]]]:
+    def __iter__(
+        self: "NDHoneyCollection[M, Unpack[Ts]]",
+    ) -> Iterator[Tuple[Unpack[Ts]]]:
         """Call super().__iter__."""
         return super().__iter__()

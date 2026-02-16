@@ -1,7 +1,7 @@
 """File node types for the metagraph.
 
-This module defines HoneyFile, a thin node wrapper representing a filesystem-backed
-file or collection of files that yields HoneyPoint[P] items when iterated.
+This module defines `HoneyFile`, a thin node wrapper representing a filesystem-backed
+file (or collection of files) that yields `HoneyPoint[P]` items when iterated.
 
 Design & typing
 --------------
@@ -26,6 +26,8 @@ from typing import (
     Generic,
     Iterable,
     Iterator,
+    Mapping,
+    Optional,
     Set,
     TypeVar,
 )
@@ -34,9 +36,10 @@ from uuid import UUID
 from honeypy.metagraph.meta.honey_node import HoneyNode
 
 P = TypeVar("P", covariant=True)
+M = TypeVar("M", bound=Mapping[str, Any])
 
 
-class HoneyFile(HoneyNode, Generic[P], ABC):
+class HoneyFile(Generic[M, P], HoneyNode[M], ABC):
     """Represents a single file node containing HoneyPoint[P] items.
 
     Parameters
@@ -63,7 +66,7 @@ class HoneyFile(HoneyNode, Generic[P], ABC):
     # TODO: can we avoid type ignoring?
     def _load(  # type: ignore
         self,
-        raw_children_metadata: Dict[UUID, Any] = {},
+        raw_children_metadata: Optional[Dict[UUID, Any]] = None,
     ) -> Iterable[P]:
         return self._load_file(self.location)
 
@@ -72,6 +75,6 @@ class HoneyFile(HoneyNode, Generic[P], ABC):
     def _load_file(location: Path) -> Set[P]:
         raise NotImplementedError
 
-    def __iter__(self: "HoneyFile[P]") -> Iterator[P]:
+    def __iter__(self: "HoneyFile[M, P]") -> Iterator[P]:
         """Call super().__iter__."""
         return super().__iter__()

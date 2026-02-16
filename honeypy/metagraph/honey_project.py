@@ -10,16 +10,18 @@ from typing import (
     Generic,
     Iterable,
     Iterator,
+    Mapping,
     TypeVar,
 )
 
 from honeypy.metagraph.honey_collection import HoneyCollection
 from honeypy.metagraph.meta.honey_node import HoneyNode
 
-C = TypeVar("C", bound=HoneyCollection["Any"], covariant=True)
+C = TypeVar("C", bound=HoneyCollection, covariant=True)
+M = TypeVar("M", bound=Mapping[str, Any])
 
 
-class HoneyProject(HoneyNode, Generic[C]):
+class HoneyProject(Generic[M, C], HoneyNode[M]):
     """Represents a single project node containing HoneyCollection items.
 
     Parameters
@@ -40,6 +42,6 @@ class HoneyProject(HoneyNode, Generic[C]):
         """Iterable[P]: Live iterable view of the node's children."""
         return super().children
 
-    def __iter__(self: "HoneyProject[C]") -> Iterator[C]:
+    def __iter__(self: "HoneyProject[M, C]") -> Iterator[C]:
         """Call super().__iter__."""
         return super().__iter__()
