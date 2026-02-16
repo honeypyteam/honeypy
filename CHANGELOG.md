@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.7.0](https://github.com/honeypyteam/honeypy/compare/v0.6.0...v0.7.0) (2026-02-16)
+
+
+### Features
+
+* add generics for metadata ([6562612](https://github.com/honeypyteam/honeypy/commit/656261220222d112c8026c520363117623c6946b))
+
 ## [0.6.0](https://github.com/honeypyteam/honeypy/compare/v0.5.0...v0.6.0) (2026-02-15)
 
 
