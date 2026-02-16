@@ -46,14 +46,14 @@ class HoneyPoint(Generic[T]):
     _id: Final[UUID]
     _data: T
     _metadata: Dict[str, Any]
-    _parents: Set[HoneyFile["HoneyPoint[T]"]]
+    _parents: Set[HoneyFile]
 
     def __init__(
         self,
         data: T,
         *,
         metadata: Optional[Dict[str, Any]] = None,
-        parents: Optional[Set[HoneyFile["HoneyPoint[T]"]]] = None,
+        parents: Optional[Set[HoneyFile]] = None,
     ) -> None:
         self._id: UUID = uuid4()
         self._data = data
@@ -76,7 +76,7 @@ class HoneyPoint(Generic[T]):
         """UUID: Stable identifier for the point (read-only)."""
         return self._id
 
-    def add_parent(self, parent: HoneyFile["HoneyPoint[T]"]) -> None:
+    def add_parent(self, parent: HoneyFile) -> None:
         """Register ``parent`` as a backlink to this point.
 
         Parameters
@@ -86,12 +86,12 @@ class HoneyPoint(Generic[T]):
         """
         self._parents.add(parent)
 
-    def remove_parent(self, parent: HoneyFile["HoneyPoint[T]"]) -> None:
+    def remove_parent(self, parent: HoneyFile) -> None:
         """Remove ``parent`` from the point's parent set if present."""
         self._parents.discard(parent)
 
     @property
-    def parents(self) -> Set[HoneyFile["HoneyPoint[T]"]]:
+    def parents(self) -> Set[HoneyFile]:
         """Return the live set of parent nodes referencing this point.
 
         Note

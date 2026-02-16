@@ -7,7 +7,7 @@ locations without touching disk layout rules of real parents.
 """
 
 from pathlib import Path
-from typing import Any, Dict, Iterable, TypedDict
+from typing import Any, Dict, Iterable, Optional, TypedDict
 from uuid import UUID
 
 from honeypy.metagraph.meta.honey_node import HoneyNode
@@ -43,7 +43,9 @@ class VirtualNode(HoneyNode):
         """
         return self._metadata["location"]
 
-    def _load(self, raw_children_metadata: Dict[UUID, Any] = {}) -> Iterable[Any]:
+    def _load(
+        self, raw_children_metadata: Optional[Dict[UUID, Any]] = None
+    ) -> Iterable[Any]:
         """Return `None`."""
         return [None]
 

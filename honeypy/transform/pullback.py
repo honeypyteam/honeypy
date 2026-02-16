@@ -30,6 +30,7 @@ from typing import (
     Callable,
     Dict,
     Iterable,
+    Mapping,
     Optional,
     Tuple,
     TypeVar,
@@ -41,7 +42,7 @@ from uuid import UUID
 
 from honeypy.metagraph.honey_collection import HoneyCollection
 from honeypy.metagraph.honey_file import HoneyFile
-from honeypy.metagraph.meta.honey_node import HoneyNode, Metadata
+from honeypy.metagraph.meta.honey_node import HoneyNode
 from honeypy.metagraph.nd_collection import NDHoneyCollection
 from honeypy.metagraph.nd_file import NDHoneyFile
 from honeypy.transform.meta.honey_transform import HoneyTransform
@@ -49,9 +50,14 @@ from honeypy.transform.meta.honey_transform import HoneyTransform
 K = TypeVar("K")
 P1 = TypeVar("P1", covariant=True)
 P2 = TypeVar("P2", covariant=True)
-F1 = TypeVar("F1", bound=HoneyFile[Any], covariant=True)
-F2 = TypeVar("F2", bound=HoneyFile[Any], covariant=True)
+F1 = TypeVar("F1", bound=HoneyFile, covariant=True)
+F2 = TypeVar("F2", bound=HoneyFile, covariant=True)
 Ts = TypeVarTuple("Ts")
+
+
+M1 = TypeVar("M1", bound=Mapping[str, Any])
+M2 = TypeVar("M2", bound=Mapping[str, Any])
+Mt = TypeVarTuple("Mt")
 
 
 class Pullback(HoneyTransform):
@@ -81,113 +87,125 @@ class Pullback(HoneyTransform):
     >>> joined = Pullback()(file_a, file_b, lambda x, y: abs(x.ts - y.ts) < delta)
     """
 
+    # NOTE type ignores are here because bounds on TypeVarTuple are not yet in Python
+    # Why did I bind the tuple-based metadata to `Mapping[str, Any]` instead of just
+    # using `Tuple`? Because I noticed typecheckers don't resolve the type variable
+    # for metadata otherwise, even if they reolve the correct generics on the node
     @overload
     def __call__(
         self,
-        node_1: HoneyFile[P1],
-        node_2: HoneyFile[P2],
+        node_1: HoneyFile[M1, P1],
+        node_2: HoneyFile[M2, P2],
         map_1: Callable[[P1], K],
         map_2: Callable[[P2], K],
-    ) -> NDHoneyFile[P1, P2]: ...
+    ) -> NDHoneyFile[Tuple[M1, M2], P1, P2]: ...
 
     @overload
     def __call__(
         self,
-        node_1: HoneyFile[P1],
-        node_2: NDHoneyFile[Unpack[Ts]],
+        node_1: HoneyFile[M1, P1],
+        node_2: NDHoneyFile[Tuple[Unpack[Mt]], Unpack[Ts]],  # type: ignore
         map_1: Callable[[P1], K],
         map_2: Callable[[Tuple[Unpack[Ts]]], K],
-    ) -> NDHoneyFile[P1, Unpack[Ts]]: ...
+    ) -> NDHoneyFile[Tuple[M1, Unpack[Mt]], P1, Unpack[Ts]]: ...  # type: ignore
 
     @overload
     def __call__(
         self,
-        node_1: NDHoneyFile[Unpack[Ts]],
-        node_2: HoneyFile[P2],
+        node_1: NDHoneyFile[Tuple[Unpack[Mt]], Unpack[Ts]],  # type: ignore
+        node_2: HoneyFile[M2, P2],
         map_1: Callable[[Tuple[Unpack[Ts]]], K],
         map_2: Callable[[P2], K],
-    ) -> NDHoneyFile[Unpack[Ts], P2]: ...
+    ) -> NDHoneyFile[Tuple[Unpack[Mt], M2], Unpack[Ts], P2]: ...  # type: ignore
 
     # Wait for multiple variadic argument unpacking for an extra signature
 
     @overload
     def __call__(
         self,
-        node_1: HoneyFile[P1],
-        node_2: HoneyFile[P2],
+        node_1: HoneyFile[M1, P1],
+        node_2: HoneyFile[M2, P2],
         map_1: Callable[[P1, P2], K],
-    ) -> NDHoneyFile[P1, P2]: ...
+    ) -> NDHoneyFile[Tuple[M1, M2], P1, P2]: ...
 
     @overload
     def __call__(
         self,
-        node_1: HoneyFile[P1],
-        node_2: NDHoneyFile[Unpack[Ts]],
+        node_1: HoneyFile[M1, P1],
+        node_2: NDHoneyFile[Tuple[Unpack[Mt]], Unpack[Ts]],  # type: ignore
         map_1: Callable[[P1, Tuple[Unpack[Ts]]], K],
-    ) -> NDHoneyFile[P1, Unpack[Ts]]: ...
+    ) -> NDHoneyFile[Tuple[M1, Unpack[Mt]], P1, Unpack[Ts]]: ...  # type: ignore
 
     @overload
     def __call__(
         self,
-        node_1: NDHoneyFile[Unpack[Ts]],
-        node_2: HoneyFile[P2],
+        node_1: NDHoneyFile[Tuple[Unpack[Mt]], Unpack[Ts]],  # type: ignore
+        node_2: HoneyFile[M2, P2],
         map_1: Callable[[Tuple[Unpack[Ts], P2]], K],
-    ) -> NDHoneyFile[Unpack[Ts], P2]: ...
+    ) -> NDHoneyFile[Tuple[Unpack[Mt], M2], Unpack[Ts], P2]: ...  # type: ignore
 
     # Wait for multiple variadic argument unpacking for an extra signature
 
     @overload
     def __call__(
         self,
-        node_1: HoneyCollection[F1],
-        node_2: HoneyCollection[F2],
+        node_1: HoneyCollection[M1, F1],
+        node_2: HoneyCollection[M2, F2],
         map_1: Callable[[F1], K],
         map_2: Callable[[F2], K],
-    ) -> NDHoneyCollection[F1, F2]: ...
+    ) -> NDHoneyCollection[Tuple[M1, M2], F1, F2]: ...
 
     @overload
     def __call__(
         self,
-        node_1: HoneyCollection[F1],
-        node_2: NDHoneyFile[Unpack[Ts]],
+        node_1: HoneyCollection[M1, F1],
+        node_2: NDHoneyFile[Tuple[Unpack[Mt]], Unpack[Ts]],  # type: ignore
         map_1: Callable[[F1], K],
         map_2: Callable[[Tuple[Unpack[Ts]]], K],
-    ) -> NDHoneyCollection[F1, Unpack[Ts]]: ...
+    ) -> NDHoneyCollection[Tuple[M1, Unpack[Mt]], F1, Unpack[Ts]]: ...  # type: ignore
 
     @overload
     def __call__(
         self,
-        node_1: NDHoneyCollection[Unpack[Ts]],
-        node_2: HoneyCollection[F2],
+        node_1: NDHoneyCollection[Tuple[Unpack[Mt]], Unpack[Ts]],  # type: ignore
+        node_2: HoneyCollection[M2, F2],
         map_1: Callable[[Tuple[Unpack[Ts]]], K],
         map_2: Callable[[F2], K],
-    ) -> NDHoneyCollection[Unpack[Ts], F2]: ...
+    ) -> NDHoneyCollection[Tuple[Unpack[Mt], M2], Unpack[Ts], F2]: ...  # type: ignore
 
     # Wait for multiple variadic argument unpacking for an extra signature
 
     @overload
     def __call__(
         self,
-        node_1: HoneyCollection[F1],
-        node_2: HoneyCollection[F2],
+        node_1: HoneyCollection[M1, F1],
+        node_2: HoneyCollection[M2, F2],
         map_1: Callable[[F1, F2], K],
-    ) -> NDHoneyCollection[F1, F2]: ...
+    ) -> NDHoneyCollection[Tuple[M1, M2], F1, F2]: ...
 
     @overload
     def __call__(
         self,
-        node_1: HoneyCollection[F1],
-        node_2: NDHoneyFile[Unpack[Ts]],
+        node_1: HoneyCollection[M1, F1],
+        node_2: NDHoneyFile[Tuple[Unpack[Mt]], Unpack[Ts]],  # type: ignore
         map_1: Callable[[F1, Tuple[Unpack[Ts]]], K],
-    ) -> NDHoneyCollection[F1, Unpack[Ts]]: ...
+    ) -> NDHoneyCollection[  # type: ignore
+        Tuple[M1, Tuple[Unpack[Mt]]],  # type: ignore
+        F1,
+        Unpack[Ts],
+    ]: ...  # type: ignore
 
     @overload
     def __call__(
         self,
-        node_1: NDHoneyCollection[Unpack[Ts]],
-        node_2: HoneyCollection[F2],
+        node_1: NDHoneyCollection[Tuple[Unpack[Mt]], Unpack[Ts]],  # type: ignore
+        node_2: HoneyCollection[M2, F2],
         map_1: Callable[[Tuple[Unpack[Ts], F2]], K],
-    ) -> NDHoneyCollection[Unpack[Ts], F2]: ...
+    ) -> NDHoneyCollection[  # type: ignore
+        Tuple[Unpack[Mt], M2],  # type: ignore
+        Unpack[Ts],
+        F2,
+    ]: ...
 
     # Wait for multiple variadic argument unpacking for an extra signature
 
@@ -197,7 +215,7 @@ class Pullback(HoneyTransform):
         node_2: HoneyNode,
         map_1: Callable,
         map_2: Optional[Callable] = None,
-    ) -> HoneyNode:
+    ) -> HoneyNode[Any]:
         """Compute the pullback (inner join) between this node and ``other``.
 
         Both nodes are loaded if necessary. ``map_1`` is applied to each child of
@@ -260,7 +278,7 @@ class Pullback(HoneyTransform):
                 if predicate(self_child, other_child):
                     joined.add((self_child, other_child))
 
-        class _JoinNode(HoneyNode):
+        class _JoinNode(HoneyNode[Any]):
             # TODO: refactor to not require the join node. Need to do a lot of work here
             def __init__(self, children, metadata=None):
                 super().__init__(
@@ -270,7 +288,7 @@ class Pullback(HoneyTransform):
                 self._loaded = True
 
             def _load(
-                self, raw_children_metadata: Dict[UUID, Any] = {}
+                self, raw_children_metadata: Optional[Dict[UUID, Any]] = None
             ) -> Iterable[Any]:
                 return self._children
 
@@ -288,12 +306,10 @@ class Pullback(HoneyTransform):
                 return {}
 
             @staticmethod
-            def _locator(
-                parent_location: Path, metadata: Optional[Metadata] = None
-            ) -> Path:
+            def _locator(parent_location: Path, metadata: Optional[Any] = None) -> Path:
                 return Path(".")
 
-        return _JoinNode(joined, metadata={})
+        return _JoinNode(joined, metadata=(node_1.metadata, node_2.metadata))
 
     def _pullback_projection(
         self, node_1: HoneyNode, node_2: HoneyNode, map_1: Callable, map_2: Callable
@@ -318,7 +334,7 @@ class Pullback(HoneyTransform):
             for match in index.get(key, []):
                 joined.add((child, match))
 
-        class _JoinNode(HoneyNode):
+        class _JoinNode(HoneyNode[Any]):
             # TODO: refactor to not require the join node. Need to do a lot of work here
             def __init__(self, children, metadata=None):
                 super().__init__(
@@ -328,7 +344,7 @@ class Pullback(HoneyTransform):
                 self._loaded = True
 
             def _load(
-                self, raw_children_metadata: Dict[UUID, Any] = {}
+                self, raw_children_metadata: Optional[Dict[UUID, Any]] = None
             ) -> Iterable[Any]:
                 return self._children
 
@@ -346,9 +362,7 @@ class Pullback(HoneyTransform):
                 return {}
 
             @staticmethod
-            def _locator(
-                parent_location: Path, metadata: Optional[Metadata] = None
-            ) -> Path:
+            def _locator(parent_location: Path, metadata: Optional[Any] = None) -> Path:
                 return Path(".")
 
-        return _JoinNode(joined, metadata={})
+        return _JoinNode(joined, metadata=(node_1.metadata, node_2.metadata))

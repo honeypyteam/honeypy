@@ -12,7 +12,7 @@ class Metadata(TypedDict):
     filename: str
 
 
-class KeyValFile(HoneyFile[KeyValPoint[T]], Generic[T]):
+class KeyValFile(HoneyFile[Metadata, KeyValPoint[T]], Generic[T]):
     def _unload(self) -> None:
         return
 

@@ -33,6 +33,13 @@ def test_nd_file_pullback_projections(plugin: PluginGetter) -> None:
         ("d", 4, "d", "four"),
     }
 
+    metadata = file_3.metadata
+
+    assert metadata == (
+        {"filename": "1_1.csv"},
+        {"filename": "1_3.csv"},
+    )
+
 
 def test_nd_file_pullback_predicate(plugin: PluginGetter) -> None:
     location = plugin("plugin_1", copy=True) / "project" / "collection_1"

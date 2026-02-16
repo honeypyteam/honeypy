@@ -12,22 +12,27 @@ from pathlib import Path
 from typing import (
     Any,
     Dict,
+    Generic,
     Iterable,
     Iterator,
+    Mapping,
     Optional,
     Set,
+    Tuple,
     Type,
-    TypeAlias,
+    TypeVar,
+    cast,
 )
 from uuid import UUID, uuid4
 
-Metadata: TypeAlias = Any
+M = TypeVar("M", bound=Mapping[str, Any] | Tuple[Mapping[str, Any], ...])
+
 
 # registry for auto-registered node classes keyed by CLASS_UUID
 _CLASS_REGISTRY: Dict[UUID, Type["HoneyNode"]] = {}
 
 
-class HoneyNode(ABC):
+class HoneyNode(ABC, Generic[M]):
     """Abstract base node for the metagraph.
 
     A HoneyNode manages a set of child objects (``T``) and exposes a small
@@ -56,13 +61,13 @@ class HoneyNode(ABC):
     _parents: Set["HoneyNode"]
     _principal_parent: "HoneyNode"
     _loaded: bool
-    _metadata: Metadata
+    _metadata: M
 
     def __init__(
         self,
         principal_parent: "HoneyNode",
         *,
-        metadata: Optional[Metadata] = None,
+        metadata: Optional[M] = None,
         load: Optional[bool] = False,
         load_metadata: Optional[bool] = True,
         uuid: Optional[UUID] = None,
@@ -93,7 +98,7 @@ class HoneyNode(ABC):
                     raw_metadata = json.load(fh)
                 self._metadata = self._parse_metadata(raw_metadata["data"])
             else:
-                self._metadata = {}
+                self._metadata = cast(M, {})
 
         if metadata is not None:
             self._metadata = metadata
@@ -144,7 +149,7 @@ class HoneyNode(ABC):
         if not self._loaded:
             return
 
-        self._metadata = {}
+        self._metadata = cast(M, {})
         try:
             self._unload()
         except Exception as e:
@@ -159,7 +164,7 @@ class HoneyNode(ABC):
         return self._loaded
 
     @property
-    def metadata(self) -> Metadata:
+    def metadata(self) -> M:
         """Mapping[str, Any]: Read-only view of the node's metadata mapping."""
         return self._metadata
 
@@ -182,8 +187,9 @@ class HoneyNode(ABC):
         return self._locator(self._principal_parent.location, self._metadata)
 
     def _load(
-        self, raw_children_metadata: Dict[UUID, Any] = {}
+        self, raw_children_metadata: Optional[Dict[UUID, Any]] = None
     ) -> Iterable["HoneyNode"]:
+        raw_children_metadata = raw_children_metadata or {}
         for uuid, raw_metadata in raw_children_metadata.items():
             cls = _CLASS_REGISTRY[UUID(raw_metadata["class_uuid"])]
 
@@ -217,7 +223,7 @@ class HoneyNode(ABC):
 
     @staticmethod
     @abstractmethod
-    def _parse_metadata(raw_metadata: Any) -> Metadata:
+    def _parse_metadata(raw_metadata: Any) -> M:
         """Read raw metadata for the node.
 
         Returns
@@ -229,13 +235,13 @@ class HoneyNode(ABC):
 
     @staticmethod
     @abstractmethod
-    def _serialise_metadata(metadata: Metadata) -> Any:
+    def _serialise_metadata(metadata: M) -> Any:
         """Serialise metadata for saving to a metadata file."""
         raise NotImplementedError
 
     @staticmethod
     @abstractmethod
-    def _locator(parent_location: Path, metadata: Metadata) -> Path:
+    def _locator(parent_location: Path, metadata: M) -> Path:
         """Return the location of this node on the filesystem."""
         raise NotImplementedError
 
