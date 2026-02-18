@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Any, Generic, Set, Tuple, TypedDict, TypeVar
+from typing import Any, Generic, List, Tuple, TypedDict, TypeVar
 from uuid import UUID
 
 from honeypy.metagraph.honey_file import HoneyFile
@@ -38,15 +38,15 @@ class KeyIntFile(KeyValFile[int]):
     CLASS_UUID = UUID("a1c9bef2-846c-4003-a357-3639628d6d13")
 
     @staticmethod
-    def _load_file(location: Path) -> Set[Tuple[str, int]]:
-        pts: Set[Tuple[str, int]] = set()
+    def _load_file(location: Path) -> List[Tuple[str, int]]:
+        pts: List[Tuple[str, int]] = []
 
         with location.open("r", encoding="utf-8") as fh:
             next(fh)
 
             for line in fh:
                 key, val = line.split(",")
-                pts.add((key, int(val)))
+                pts.append((key, int(val)))
 
         return pts
 
@@ -55,14 +55,14 @@ class KeyStrFile(KeyValFile[str]):
     CLASS_UUID = UUID("45cd53b2-8d48-4f07-b560-3d0142a8d626")
 
     @staticmethod
-    def _load_file(location: Path) -> Set[Tuple[str, str]]:
-        pts: Set[Tuple[str, str]] = set()
+    def _load_file(location: Path) -> List[Tuple[str, str]]:
+        pts: List[Tuple[str, str]] = []
 
         with location.open("r", encoding="utf-8") as fh:
             next(fh)
 
             for line in fh:
                 key, val = line.split(",")
-                pts.add((key, str(val)))
+                pts.append((key, str(val)))
 
         return pts

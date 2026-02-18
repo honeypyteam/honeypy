@@ -284,7 +284,7 @@ class Pullback(HoneyTransform):
                 super().__init__(
                     node_1._principal_parent, load=False, metadata=metadata or {}
                 )
-                self._children = set(children)
+                self._children = children
                 self._loaded = True
 
             def _load(
@@ -293,7 +293,7 @@ class Pullback(HoneyTransform):
                 return self._children
 
             def _unload(self) -> None:
-                self._children = set()
+                self._children = []
 
             # TODO: Think about how to combine metadata
             # Likely add as generic on HoneyNode. Makes it easier to union for instance
@@ -343,7 +343,7 @@ class Pullback(HoneyTransform):
                 super().__init__(
                     node_1._principal_parent, load=False, metadata=metadata or {}
                 )
-                self._children = set(children)
+                self._children = children
                 self._loaded = True
 
             def _load(
@@ -352,7 +352,7 @@ class Pullback(HoneyTransform):
                 return self._children
 
             def _unload(self) -> None:
-                self._children = set()
+                self._children = []
 
             # TODO: Think about how to combine metadata
             # Likely add as generic on HoneyNode. Makes it easier to union for instance

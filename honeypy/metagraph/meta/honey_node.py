@@ -15,6 +15,7 @@ from typing import (
     Generic,
     Iterable,
     Iterator,
+    List,
     Mapping,
     Optional,
     Set,
@@ -59,7 +60,7 @@ class HoneyNode(ABC, Generic[M]):
 
     _uuid: UUID
 
-    _children: Set[Any]
+    _children: List[Any]
     _parents: Set["HoneyNode"]
     _principal_parent: "HoneyNode"
     _loaded: bool
@@ -81,7 +82,7 @@ class HoneyNode(ABC, Generic[M]):
         """
         self._uuid = uuid or uuid4()
 
-        self._children = set()
+        self._children = []
         self._parents = set()
         self._loaded = False
 
@@ -114,9 +115,9 @@ class HoneyNode(ABC, Generic[M]):
             child set. Implementations should ensure bidirectional
             consistency if they also maintain parent links on children.
         """
-        self._children.update(items)
+        self._children += items
 
-    def load(self) -> None:
+    def load(self, children: Optional[Iterable[Any]] = None) -> None:
         """Load metadata and children for the node.
 
         This method is idempotent. It first attempts to load metadata via
@@ -125,12 +126,15 @@ class HoneyNode(ABC, Generic[M]):
         (printed) to avoid breaking consumers; callers may override to provide
         stricter behaviour.
         """
-        if self._loaded:
+        if self._loaded and children is None:
             return
 
         try:
-            children = self._load(HoneyNode._get_raw_children_metadata(self.location))
-            self._children.update(children)
+            if children is None:
+                children = self._load(
+                    HoneyNode._get_raw_children_metadata(self.location)
+                )
+            self._children = [c for c in children]
         except Exception as e:
             print(f"Problem loading children for {self!r}: {e!r}")
         finally:
@@ -192,7 +196,7 @@ class HoneyNode(ABC, Generic[M]):
         except Exception as e:
             print(f"Problem unloading {self!r}: {e!r}")
         finally:
-            self._children = set()
+            self._children = []
             self._loaded = False
 
     @property
