@@ -26,9 +26,9 @@ from typing import (
     Generic,
     Iterable,
     Iterator,
+    List,
     Mapping,
     Optional,
-    Set,
     TypeVar,
 )
 from uuid import UUID
@@ -58,7 +58,7 @@ class HoneyFile(Generic[M, P], HoneyNode[M], ABC):
 
     @staticmethod
     @abstractmethod
-    def _load_file(location: Path) -> Set[P]:
+    def _load_file(location: Path) -> List[P]:
         raise NotImplementedError
 
     def __iter__(self: "HoneyFile[M, P]") -> Iterator[P]:
