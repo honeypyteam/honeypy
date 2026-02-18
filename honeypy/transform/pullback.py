@@ -309,6 +309,9 @@ class Pullback(HoneyTransform):
             def _locator(parent_location: Path, metadata: Optional[Any] = None) -> Path:
                 return Path(".")
 
+            def _save(self, location: Path, metadata: Any) -> None:
+                pass
+
         return _JoinNode(joined, metadata=(node_1.metadata, node_2.metadata))
 
     def _pullback_projection(
@@ -364,5 +367,8 @@ class Pullback(HoneyTransform):
             @staticmethod
             def _locator(parent_location: Path, metadata: Optional[Any] = None) -> Path:
                 return Path(".")
+
+            def _save(self, location: Path, metadata: Any) -> None:
+                pass
 
         return _JoinNode(joined, metadata=(node_1.metadata, node_2.metadata))

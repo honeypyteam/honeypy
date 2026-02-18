@@ -33,4 +33,4 @@ def test_honey_project_load_using_metadata(plugin: PluginGetter):
 
     file_1 = next(f for f in files if f.metadata["filename"] == "1_1.csv")
 
-    assert {p.value for p in file_1} == {("a", 1), ("b", 3), ("c", 9), ("d", 4)}
+    assert {p for p in file_1} == {("a", 1), ("b", 3), ("c", 9), ("d", 4)}

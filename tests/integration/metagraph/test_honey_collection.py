@@ -17,9 +17,7 @@ def test_honey_collection_using_metadata(plugin: PluginGetter):
     assert collection.loaded
 
     assert {
-        (file.location.name, key, value)
-        for file in collection
-        for key, value in {point.value for point in file}
+        (file.location.name, key, value) for file in collection for key, value in file
     } == {
         ("1_1.csv", "a", 11),
         ("1_1.csv", "b", 53),

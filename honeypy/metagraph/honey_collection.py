@@ -2,7 +2,7 @@
 
 This module provides HoneyCollection, a container node that represents a
 collection of HoneyFile[T] instances stored under a filesystem location. The
-collection is parameterized by the point type T exposed by its files.
+collection is parameterized by the "point" type T exposed by its files.
 
 The collection class is designed to be flexible, and its existence is a semantic
 courtesy (it suffices, in fact, that it is a subtype of `HoneyCollection`)

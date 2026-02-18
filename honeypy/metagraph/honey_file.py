@@ -1,11 +1,11 @@
 """File node types for the metagraph.
 
 This module defines `HoneyFile`, a thin node wrapper representing a filesystem-backed
-file (or collection of files) that yields `HoneyPoint[P]` items when iterated.
+file (or collection of files) that yields point-like objects when iterated.
 
 Design & typing
 --------------
-- HoneyFile[P] is parameterised by the point payload type P (a HoneyPoint subtype).
+- HoneyFile[P] is parameterised by the "point" payload type P
 - For N-ary/variadic joins we use TypeVarTuple (PEP 646) in overloads; overloads provide
   precise static shapes while the runtime implementation returns a lightweight
   in-memory node (or a concrete HoneyFile when a caller supplies a factory).
@@ -34,28 +34,14 @@ from typing import (
 from uuid import UUID
 
 from honeypy.metagraph.meta.honey_node import HoneyNode
+from honeypy.metagraph.meta.raw_metadata import RawMetadata
 
 P = TypeVar("P", covariant=True)
 M = TypeVar("M", bound=Mapping[str, Any])
 
 
 class HoneyFile(Generic[M, P], HoneyNode[M], ABC):
-    """Represents a single file node containing HoneyPoint[P] items.
-
-    Parameters
-    ----------
-    *args, **kwargs
-        Arguments are forwarded to :class:`HoneyNode`. Concrete subclasses
-        typically accept a pathlib.Path ``location`` or similar and pass
-        ``load=True`` to auto-load children.
-
-    See Also
-    --------
-    honeypy.metagraph.meta.honey_node.HoneyNode
-        Base class that defines the load/unload/metadata contract.
-    honeypy.metagraph.honey_point.HoneyPoint
-        Lightweight wrapper type used for the points contained in the file.
-    """
+    """Represents a single file node containing point-like items."""
 
     @property
     def children(self) -> Iterable[P]:
@@ -66,7 +52,7 @@ class HoneyFile(Generic[M, P], HoneyNode[M], ABC):
     # TODO: can we avoid type ignoring?
     def _load(  # type: ignore
         self,
-        raw_children_metadata: Optional[Dict[UUID, Any]] = None,
+        raw_children_metadata: Optional[Dict[UUID, RawMetadata]] = None,
     ) -> Iterable[P]:
         return self._load_file(self.location)
 
