@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.8.0](https://github.com/honeypyteam/honeypy/compare/v0.7.0...v0.8.0) (2026-02-18)
+
+
+### Features
+
+* remove honeypoint ([94683b5](https://github.com/honeypyteam/honeypy/commit/94683b5727ac1969ec44d669a8d120777a7bcb7f))
+
 ## [0.7.0](https://github.com/honeypyteam/honeypy/compare/v0.6.0...v0.7.0) (2026-02-16)
 
 
