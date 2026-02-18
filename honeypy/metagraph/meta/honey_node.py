@@ -25,6 +25,8 @@ from typing import (
 )
 from uuid import UUID, uuid4
 
+from honeypy.metagraph.meta.raw_metadata import RawMetadata
+
 M = TypeVar("M", bound=Mapping[str, Any] | Tuple[Mapping[str, Any], ...])
 
 
@@ -88,14 +90,10 @@ class HoneyNode(ABC, Generic[M]):
         self._principal_parent.update([self])
 
         if load_metadata and metadata is None:
-            metadata_file = HoneyNode._metadata_file(
+            raw_metadata = HoneyNode._raw_metadata(
                 self._principal_parent.location, self._uuid
             )
-
-            if metadata_file.exists():
-                raw_metadata: Any
-                with open(metadata_file, "r") as fh:
-                    raw_metadata = json.load(fh)
+            if raw_metadata is not None:
                 self._metadata = self._parse_metadata(raw_metadata["data"])
             else:
                 self._metadata = cast(M, {})
@@ -137,6 +135,45 @@ class HoneyNode(ABC, Generic[M]):
             print(f"Problem loading children for {self!r}: {e!r}")
         finally:
             self._loaded = True
+
+    def save(self, recursive: Optional[bool] = True) -> None:
+        """
+        Save this node.
+
+        Parameters
+        ----------
+        recursive: bool
+            If true, save children as well
+
+        Notes
+        -----
+        Because of the implicit data hierarchy, there is no need to save data related
+        to the children. In fact, this is discouraged as it breaks away from the
+        framework and violates loose coupling between parent and child data
+        """
+        if not self._loaded:
+            self.load()
+
+        self._save_metadata()
+        self.location.parent.mkdir(parents=True, exist_ok=True)
+        self._save(self.location, self.metadata)
+
+        if recursive:
+            for child in self.children:
+                child.save(recursive=True)
+
+        return
+
+    def _save_metadata(self) -> None:
+        raw_metadata: RawMetadata = {
+            "class_uuid": str(self.CLASS_UUID),
+            "data": self._serialise_metadata(self.metadata),
+        }
+
+        parent_loc = self._principal_parent.location
+        metadata_file = HoneyNode._get_metadata_file(parent_loc, self._uuid)
+        metadata_file.parent.mkdir(parents=True, exist_ok=True)
+        metadata_file.write_text(json.dumps(raw_metadata), encoding="utf-8")
 
     def unload(self) -> None:
         """Unload the node and release in-memory child resources.
@@ -187,7 +224,7 @@ class HoneyNode(ABC, Generic[M]):
         return self._locator(self._principal_parent.location, self._metadata)
 
     def _load(
-        self, raw_children_metadata: Optional[Dict[UUID, Any]] = None
+        self, raw_children_metadata: Optional[Dict[UUID, RawMetadata]] = None
     ) -> Iterable["HoneyNode"]:
         raw_children_metadata = raw_children_metadata or {}
         for uuid, raw_metadata in raw_children_metadata.items():
@@ -201,11 +238,22 @@ class HoneyNode(ABC, Generic[M]):
         raise NotImplementedError
 
     @staticmethod
-    def _metadata_file(parent_location: Path, id: UUID) -> Path:
-        return parent_location / ".honeypy" / "children_metadata" / f"{id!s}.json"
+    def _raw_metadata(parent_location: Path, uuid: UUID) -> RawMetadata | None:
+        metadata_file = HoneyNode._get_metadata_file(parent_location, uuid)
+
+        raw_metadata: RawMetadata | None = None
+        if metadata_file.exists():
+            with open(metadata_file, "r") as fh:
+                raw_metadata = json.load(fh)
+
+        return raw_metadata
 
     @staticmethod
-    def _get_raw_children_metadata(location: Path) -> Dict[UUID, Any]:
+    def _get_metadata_file(parent_location: Path, uuid: UUID) -> Path:
+        return parent_location / ".honeypy" / "children_metadata" / f"{uuid!s}.json"
+
+    @staticmethod
+    def _get_raw_children_metadata(location: Path) -> Dict[UUID, RawMetadata]:
         children_metadata_dir = location / ".honeypy" / "children_metadata"
 
         if not children_metadata_dir.exists():
@@ -216,7 +264,7 @@ class HoneyNode(ABC, Generic[M]):
             uuid = UUID(f.stem)
 
             with open(f, "r", encoding="utf-8") as fh:
-                all_metadata = json.load(fh)
+                all_metadata: RawMetadata = json.load(fh)
                 result[uuid] = all_metadata
 
         return result
@@ -243,6 +291,22 @@ class HoneyNode(ABC, Generic[M]):
     @abstractmethod
     def _locator(parent_location: Path, metadata: M) -> Path:
         """Return the location of this node on the filesystem."""
+        raise NotImplementedError
+
+    @abstractmethod
+    def _save(self, location: Path, metadata: M) -> None:
+        """
+        Save data for the current node.
+
+        Notes
+        -----
+        Only data related to the current node should be saved. That is, children's
+        data should not be handled here but rather in the corresponding child's class.
+        Recursion in the `save` method takes care of saving children's data
+
+        For example, a `HoneyCollection` instance should not write to the filesystem
+        data related to a `HoneyFile`, even if it's a child of the collection
+        """
         raise NotImplementedError
 
     def __len__(self) -> int:

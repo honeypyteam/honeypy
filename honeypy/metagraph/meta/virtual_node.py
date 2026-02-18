@@ -67,3 +67,6 @@ class VirtualNode(HoneyNode):
     def _locator(parent_location: Path, metadata: Metadata) -> Path:
         """Return the location of this node from the metadata directly."""
         return metadata["location"]
+
+    def _save(self, location: Path, metadata: Any) -> None:
+        pass

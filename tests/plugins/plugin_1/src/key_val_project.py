@@ -37,3 +37,6 @@ class KeyValProject(HoneyProject[Metadata, KeyVarCollections]):
     @staticmethod
     def _locator(parent_location: Path, metadata: Metadata) -> Path:
         return parent_location
+
+    def _save(self, location: Path, metadata: Metadata) -> None:
+        return

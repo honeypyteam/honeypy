@@ -58,6 +58,9 @@ class KeyValCollection(HoneyCollection[Metadata, T], Generic[T]):
     def _get_class(self) -> Any:
         raise NotImplementedError
 
+    def _save(self, location: Path, metadata: Metadata) -> None:
+        return
+
     @staticmethod
     def _locator(
         parent_location: Path,

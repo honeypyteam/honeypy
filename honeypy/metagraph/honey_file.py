@@ -34,6 +34,7 @@ from typing import (
 from uuid import UUID
 
 from honeypy.metagraph.meta.honey_node import HoneyNode
+from honeypy.metagraph.meta.raw_metadata import RawMetadata
 
 P = TypeVar("P", covariant=True)
 M = TypeVar("M", bound=Mapping[str, Any])
@@ -66,7 +67,7 @@ class HoneyFile(Generic[M, P], HoneyNode[M], ABC):
     # TODO: can we avoid type ignoring?
     def _load(  # type: ignore
         self,
-        raw_children_metadata: Optional[Dict[UUID, Any]] = None,
+        raw_children_metadata: Optional[Dict[UUID, RawMetadata]] = None,
     ) -> Iterable[P]:
         return self._load_file(self.location)
 

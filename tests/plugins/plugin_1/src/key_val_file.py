@@ -28,6 +28,12 @@ class KeyValFile(HoneyFile[Metadata, KeyValPoint[T]], Generic[T]):
     def _locator(parent_location: Path, metadata: Metadata) -> Path:
         return parent_location / metadata["filename"]
 
+    def _save(self, location: Path, metadata: Metadata) -> None:
+        with location.open("w", encoding="utf-8") as fh:
+            fh.write("key,value\n")
+            for key, val in self.children:  # type: ignore
+                fh.write(f"{key!s},{val!s}\n")  # type: ignore
+
 
 class KeyIntFile(KeyValFile[int]):
     CLASS_UUID = UUID("a1c9bef2-846c-4003-a357-3639628d6d13")
