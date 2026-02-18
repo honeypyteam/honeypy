@@ -29,22 +29,7 @@ M = TypeVar("M", bound=Tuple[Mapping[str, Any], ...])
 
 
 class NDHoneyFile(Generic[M, Unpack[Ts]], HoneyNode[M]):
-    """Represents a single file node containing HoneyPoint[P] items.
-
-    Parameters
-    ----------
-    *args, **kwargs
-        Arguments are forwarded to :class:`HoneyNode`. Concrete subclasses
-        typically accept a pathlib.Path ``location`` or similar and pass
-        ``load=True`` to auto-load children.
-
-    See Also
-    --------
-    honeypy.metagraph.meta.honey_node.HoneyNode
-        Base class that defines the load/unload/metadata contract.
-    honeypy.metagraph.honey_point.HoneyPoint
-        Lightweight wrapper type used for the points contained in the file.
-    """
+    """Represents a single file node containing point-like items."""
 
     @property
     def children(self) -> Iterable[Tuple[Unpack[Ts]]]:

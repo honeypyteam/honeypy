@@ -12,7 +12,7 @@ def test_honey_file_gets_data(plugin: PluginGetter):
         principal_parent=collection, metadata={"filename": "1_1.csv"}, load=True
     )
 
-    assert {s.value for s in file} == {("a", 1), ("b", 3), ("c", 9), ("d", 4)}
+    assert {s for s in file} == {("a", 1), ("b", 3), ("c", 9), ("d", 4)}
 
 
 def test_honey_file_load_unload(plugin: PluginGetter):

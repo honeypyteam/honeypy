@@ -8,7 +8,6 @@ from .honeypy import HoneyPy
 from .metagraph import (
     honey_collection,
     honey_file,
-    honey_point,
     honey_project,
     nd_collection,
     nd_file,
@@ -17,7 +16,6 @@ from .metagraph import (
 
 __all__ = [
     "HoneyPy",
-    "honey_point",
     "honey_file",
     "honey_collection",
     "honey_project",
