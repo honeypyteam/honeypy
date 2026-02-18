@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.9.0](https://github.com/honeypyteam/honeypy/compare/v0.8.0...v0.9.0) (2026-02-18)
+
+
+### Features
+
+* add adapter-like code for files (or nodes in general) ([d8ee79d](https://github.com/honeypyteam/honeypy/commit/d8ee79dd31203396348ed94d1835f67a57a57618))
+
 ## [0.8.0](https://github.com/honeypyteam/honeypy/compare/v0.7.0...v0.8.0) (2026-02-18)
 
 

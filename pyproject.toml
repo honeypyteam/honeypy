@@ -1,6 +1,6 @@
 [project]
 name = "honeypy"
-version = "0.8.0"
+version = "0.9.0"
 description = "A lightweight, extensible framework managing research data, analyses and provenance"
 authors = [
     {name = "Lawrence Borst",email = "laurens.s.borst@gmail.com"}
