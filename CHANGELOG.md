@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.10.0](https://github.com/honeypyteam/honeypy/compare/v0.9.0...v0.10.0) (2026-02-19)
+
+
+### Features
+
+* slicing operations on files/nodes ([fde40b7](https://github.com/honeypyteam/honeypy/commit/fde40b7123b3b51034e35696e63c9855508d0d4e))
+
 ## [0.9.0](https://github.com/honeypyteam/honeypy/compare/v0.8.0...v0.9.0) (2026-02-18)
 
 
