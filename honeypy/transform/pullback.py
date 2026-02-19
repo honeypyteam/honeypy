@@ -30,6 +30,7 @@ from typing import (
     Callable,
     Dict,
     Iterable,
+    List,
     Mapping,
     Optional,
     Tuple,
@@ -271,15 +272,24 @@ class Pullback(HoneyTransform):
         predicate: Callable[[Any, Any], bool],
     ) -> HoneyNode:
         """Perform a pullback by using a predicate over points from two domains."""
-        joined = set()
+        joined: List[tuple[Any, Any]] = []
 
         for self_child in node_1:
             for other_child in node_2:
                 if predicate(self_child, other_child):
-                    joined.add((self_child, other_child))
+                    if node_1.arity == 1 and node_2.arity == 1:
+                        joined.append((self_child, other_child))
+                    elif node_1.arity != 1 and node_2.arity == 1:
+                        joined.append((*self_child, other_child))
+                    elif node_2.arity == 1 and node_2.arity != 1:
+                        joined.append((self_child, *other_child))
+                    else:
+                        joined.append((*self_child, *other_child))
 
         class _JoinNode(HoneyNode[Any]):
             # TODO: refactor to not require the join node. Need to do a lot of work here
+            ARITY = node_2.arity + node_1.arity
+
             def __init__(self, children, metadata=None):
                 super().__init__(
                     node_1._principal_parent, load=False, metadata=metadata or {}
@@ -327,7 +337,7 @@ class Pullback(HoneyTransform):
                 continue
             index.setdefault(key, []).append(child)
 
-        joined: set[tuple[Any, Any]] = set()
+        joined: List[tuple[Any, Any]] = []
         for child in node_1:
             try:
                 key = map_1(child)
@@ -335,9 +345,18 @@ class Pullback(HoneyTransform):
                 print(f"Problem mapping self child {child!r}: {e!r}")
                 continue
             for match in index.get(key, []):
-                joined.add((child, match))
+                if node_1.arity == 1 and node_2.arity == 1:
+                    joined.append((child, match))
+                elif node_1.arity != 1 and node_2.arity == 1:
+                    joined.append((*child, match))
+                elif node_2.arity == 1 and node_2.arity != 1:
+                    joined.append((child, *match))
+                else:
+                    joined.append((*child, *match))
 
         class _JoinNode(HoneyNode[Any]):
+            ARITY = node_2.arity + node_1.arity
+
             # TODO: refactor to not require the join node. Need to do a lot of work here
             def __init__(self, children, metadata=None):
                 super().__init__(

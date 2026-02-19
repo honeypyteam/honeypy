@@ -1,9 +1,9 @@
-from typing import Tuple
+from typing import List, Tuple
 
 from honeypy.metagraph.meta.virtual_node import VirtualNode
 from honeypy.transform.pullback import Pullback
 from tests.fixtures.get_plugin import PluginGetter
-from tests.plugins.plugin_1.src.key_val_file import KeyIntFile, KeyStrFile
+from tests.plugins.plugin_1.src.key_val_file import KeyBoolFile, KeyIntFile, KeyStrFile
 
 
 def test_nd_file_pullback_projections(plugin: PluginGetter) -> None:
@@ -27,9 +27,9 @@ def test_nd_file_pullback_projections(plugin: PluginGetter) -> None:
     assert {
         (*integer_point, *string_point) for (integer_point, string_point) in file_3
     } == {
-        ("a", 1, "a", "one\n"),
-        ("b", 3, "b", "three\n"),
-        ("c", 9, "c", "nine\n"),
+        ("a", 1, "a", "one"),
+        ("b", 3, "b", "three"),
+        ("c", 9, "c", "nine"),
         ("d", 4, "d", "four"),
     }
 
@@ -59,8 +59,57 @@ def test_nd_file_pullback_predicate(plugin: PluginGetter) -> None:
     assert {
         (*integer_point, *string_point) for (integer_point, string_point) in file_3
     } == {
-        ("a", 1, "a", "one\n"),
-        ("b", 3, "b", "three\n"),
-        ("c", 9, "c", "nine\n"),
+        ("a", 1, "a", "one"),
+        ("b", 3, "b", "three"),
+        ("c", 9, "c", "nine"),
         ("d", 4, "d", "four"),
     }
+
+
+def test_nd_file_slicing(plugin: PluginGetter) -> None:
+    plugin_path = plugin("plugin_1", copy=True)
+
+    location_1 = plugin_path / "project" / "collection_1"
+    location_2 = plugin_path / "project" / "collection_4"
+
+    collection_1 = VirtualNode(location_1)
+    collection_2 = VirtualNode(location_2)
+
+    file_1 = KeyIntFile(collection_1, metadata={"filename": "1_1.csv"}, load=True)
+    file_2 = KeyStrFile(collection_1, metadata={"filename": "1_3.csv"}, load=True)
+    file_3 = KeyBoolFile(collection_2, metadata={"filename": "4_1.csv"}, load=True)
+
+    def int_map(point: Tuple[str, int]) -> str:
+        return point[0]
+
+    def str_map(point: Tuple[str, str]) -> str:
+        return point[0]
+
+    def bool_map(point: Tuple[str, bool]) -> str:
+        return point[0]
+
+    def int_str_map(point: Tuple[Tuple[str, int], Tuple[str, str]]) -> str:
+        return point[0][0]
+
+    pullback = Pullback()
+
+    file_4 = pullback(file_1, file_2, int_map, str_map)
+    file_5 = pullback(file_4, file_3, int_str_map, bool_map)
+
+    all_points: List[Tuple[Tuple[str, int], Tuple[str, str], Tuple[str, bool]]] = [
+        (("a", 1), ("a", "one"), ("a", True)),
+        (("b", 3), ("b", "three"), ("b", True)),
+        (("c", 9), ("c", "nine"), ("c", False)),
+        (("d", 4), ("d", "four"), ("d", False)),
+    ]
+
+    assert list(file_5) == all_points
+
+    # TODO: such projections really are transformations on the files. They should
+    # be coded such that the file sees a projection in its provenance
+    assert list(file_5[...]) == all_points
+    assert file_5[2] == (("c", 9), ("c", "nine"), ("c", False))
+    assert file_5[2, 0] == ("c", 9)
+    assert file_5[1, :] == (("b", 3), ("b", "three"), ("b", True))
+    assert list(file_5[:3, 0]) == [("a", 1), ("b", 3), ("c", 9)]
+    assert list(file_5[:3, :1]) == [(("a", 1),), (("b", 3),), (("c", 9),)]

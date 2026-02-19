@@ -18,6 +18,8 @@ Behaviour
   when you need heterogeneous collections; prefer factory helpers to avoid casts.
 """
 
+from __future__ import annotations
+
 from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import (
@@ -36,15 +38,15 @@ from uuid import UUID
 from honeypy.metagraph.meta.honey_node import HoneyNode
 from honeypy.metagraph.meta.raw_metadata import RawMetadata
 
-P = TypeVar("P", covariant=True)
+P_co = TypeVar("P_co", covariant=True)
 M = TypeVar("M", bound=Mapping[str, Any])
 
 
-class HoneyFile(Generic[M, P], HoneyNode[M], ABC):
+class HoneyFile(Generic[M, P_co], HoneyNode[M], ABC):
     """Represents a single file node containing point-like items."""
 
     @property
-    def children(self) -> Iterable[P]:
+    def children(self) -> Iterable[P_co]:
         """Iterable[P]: Live iterable view of the node's children."""
         return super().children
 
@@ -53,14 +55,17 @@ class HoneyFile(Generic[M, P], HoneyNode[M], ABC):
     def _load(  # type: ignore
         self,
         raw_children_metadata: Optional[Dict[UUID, RawMetadata]] = None,
-    ) -> Iterable[P]:
+    ) -> Iterable[P_co]:
         return self._load_file(self.location)
 
     @staticmethod
     @abstractmethod
-    def _load_file(location: Path) -> List[P]:
+    def _load_file(location: Path) -> List[P_co]:
         raise NotImplementedError
 
-    def __iter__(self: "HoneyFile[M, P]") -> Iterator[P]:
+    def __iter__(self) -> Iterator[P_co]:
         """Call super().__iter__."""
         return super().__iter__()
+
+    def __getitem__(self, idx):
+        return super().__getitem__(idx)

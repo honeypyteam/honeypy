@@ -40,6 +40,7 @@ ensure_newline_before_comments = true
 
 [tool.pydocstyle]
 convention = "numpy"
+add-ignore = ["D105"]
 
 
 [build-system]

@@ -26,6 +26,10 @@ from honeypy.metagraph.meta.honey_node import HoneyNode
 
 Ts = TypeVarTuple("Ts")
 M = TypeVar("M", bound=Tuple[Mapping[str, Any], ...])
+A = TypeVar("A")
+B = TypeVar("B")
+C = TypeVar("C")
+D = TypeVar("D")
 
 
 class NDHoneyFile(Generic[M, Unpack[Ts]], HoneyNode[M]):
@@ -39,3 +43,7 @@ class NDHoneyFile(Generic[M, Unpack[Ts]], HoneyNode[M]):
     def __iter__(self: "NDHoneyFile[M, Unpack[Ts]]") -> Iterator[Tuple[Unpack[Ts]]]:
         """Call super().__iter__."""
         return super().__iter__()
+
+    def __getitem__(self, idx):
+        """Get an item. Delegates to super()."""
+        return super().__getitem__(idx)

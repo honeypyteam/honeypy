@@ -1,0 +1,112 @@
+from __future__ import annotations
+
+from types import EllipsisType
+from typing import (
+    Any,
+    Iterator,
+    Literal,
+    Mapping,
+    Protocol,
+    Tuple,
+    TypeVar,
+    TypeVarTuple,
+    Unpack,
+    overload,
+)
+
+from honeypy.metagraph import NDHoneyFile
+
+Ts = TypeVarTuple("Ts")
+M = TypeVar("M", bound=Tuple[Mapping[str, Any], ...])
+A = TypeVar("A")
+B = TypeVar("B")
+C = TypeVar("C")
+D = TypeVar("D")
+
+class IndexableNDFile(Protocol[Unpack[Ts]]):
+    @overload
+    def __getitem__(self, idx: int) -> Tuple[Unpack[Ts]]: ...
+    @overload
+    def __getitem__(self, idx: slice) -> Iterator[Tuple[Unpack[Ts]]]: ...
+    @overload
+    def __getitem__(self, idx: EllipsisType) -> Iterator[Tuple[Unpack[Ts]]]: ...
+    @overload
+    def __getitem__(self, idx: Tuple[int, slice]) -> Tuple[Unpack[Ts]]: ...
+    @overload
+    def __getitem__(
+        self, idx: Tuple[int, EllipsisType]
+    ) -> Iterator[Tuple[Unpack[Ts]]]: ...
+    @overload
+    def __getitem__(self, idx: Tuple[slice, slice]) -> Iterator[Tuple[Unpack[Ts]]]: ...
+    @overload
+    def __getitem__(  # type: ignore
+        self: "NDHoneyFile[M, A, B, C, D]", idx: Tuple[int, Literal[0]]
+    ) -> A: ...
+    @overload
+    def __getitem__(  # type: ignore
+        self: "NDHoneyFile[M, A, B, C, D]", idx: Tuple[int, Literal[1]]
+    ) -> B: ...
+    @overload
+    def __getitem__(  # type: ignore
+        self: "NDHoneyFile[M, A, B, C, D]", idx: Tuple[int, Literal[2]]
+    ) -> C: ...
+    @overload
+    def __getitem__(  # type: ignore
+        self: "NDHoneyFile[M, A, B, C, D]", idx: Tuple[int, Literal[3]]
+    ) -> D: ...
+    @overload
+    def __getitem__(  # type: ignore
+        self: "NDHoneyFile[M, A, B, C]", idx: Tuple[int, Literal[0]]
+    ) -> A: ...
+    @overload
+    def __getitem__(  # type: ignore
+        self: "NDHoneyFile[M, A, B, C]", idx: Tuple[int, Literal[1]]
+    ) -> B: ...
+    @overload
+    def __getitem__(  # type: ignore
+        self: "NDHoneyFile[M, A, B, C]", idx: Tuple[int, Literal[2]]
+    ) -> C: ...
+    @overload
+    def __getitem__(  # type: ignore
+        self: "NDHoneyFile[M, A, B]", idx: Tuple[int, Literal[0]]
+    ) -> A: ...
+    @overload
+    def __getitem__(  # type: ignore
+        self: "NDHoneyFile[M, A, B]", idx: Tuple[int, Literal[1]]
+    ) -> B: ...
+    @overload
+    def __getitem__(  # type: ignore
+        self: "NDHoneyFile[M, A, B, C, D]", idx: Tuple[slice | EllipsisType, Literal[0]]
+    ) -> Tuple[A, ...]: ...
+    @overload
+    def __getitem__(  # type: ignore
+        self: "NDHoneyFile[M, A, B, C, D]", idx: Tuple[slice | EllipsisType, Literal[1]]
+    ) -> Tuple[B, ...]: ...
+    @overload
+    def __getitem__(  # type: ignore
+        self: "NDHoneyFile[M, A, B, C, D]", idx: Tuple[slice | EllipsisType, Literal[2]]
+    ) -> Tuple[C, ...]: ...
+    @overload
+    def __getitem__(  # type: ignore
+        self: "NDHoneyFile[M, A, B, C, D]", idx: Tuple[slice | EllipsisType, Literal[3]]
+    ) -> Tuple[D, ...]: ...
+    @overload
+    def __getitem__(  # type: ignore
+        self: "NDHoneyFile[M, A, B, C]", idx: Tuple[slice | EllipsisType, Literal[0]]
+    ) -> Tuple[A, ...]: ...
+    @overload
+    def __getitem__(  # type: ignore
+        self: "NDHoneyFile[M, A, B, C]", idx: Tuple[slice | EllipsisType, Literal[1]]
+    ) -> Tuple[B, ...]: ...
+    @overload
+    def __getitem__(  # type: ignore
+        self: "NDHoneyFile[M, A, B, C]", idx: Tuple[slice | EllipsisType, Literal[2]]
+    ) -> Tuple[C, ...]: ...
+    @overload
+    def __getitem__(  # type: ignore
+        self: "NDHoneyFile[M, A, B]", idx: Tuple[slice | EllipsisType, Literal[0]]
+    ) -> Tuple[A, ...]: ...
+    @overload
+    def __getitem__(  # type: ignore
+        self: "NDHoneyFile[M, A, B]", idx: Tuple[slice | EllipsisType, Literal[1]]
+    ) -> Tuple[B, ...]: ...

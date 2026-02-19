@@ -11,7 +11,7 @@ def test_honey_file_as_adapter(plugin: PluginGetter):
     file = ArrayFile(
         collection,
         metadata={
-            "filename": "array_1.csv",
+            "filename": "3_1.csv",
         },
         load=True,
     )
