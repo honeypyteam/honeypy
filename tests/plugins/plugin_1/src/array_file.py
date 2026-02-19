@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Iterable, Iterator, List, Tuple, TypeAlias, TypedDict
+from uuid import UUID
 
 from honeypy.metagraph.adapters import LoadableMixin
 from honeypy.metagraph.honey_file import HoneyFile
@@ -58,6 +59,8 @@ class ArrayFile(LoadableMixin[ExternalArray], HoneyFile[Metadata, InternalArrayR
     This is a dummy example that demonstrates working with "external" libraries
     using files more like an adapter using the `LoadableMixin`
     """
+
+    CLASS_UUID = UUID("fc5cd48b-e5f9-4bdf-a956-64cec3c0d620")
 
     def _unload(self) -> None:
         pass

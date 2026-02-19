@@ -28,3 +28,18 @@ def test_honey_file_load_unload(plugin: PluginGetter):
     file.unload()
 
     assert not file.loaded
+
+
+def test_honey_file_slicing(plugin: PluginGetter):
+    location = plugin("plugin_1", copy=True) / "project" / "collection_1"
+    collection = VirtualNode(location=location)
+
+    file = KeyIntFile(
+        principal_parent=collection, metadata={"filename": "1_1.csv"}, load=True
+    )
+
+    assert file[0] == ("a", 1)
+    assert file[-1] == ("d", 4)
+    assert list(file[1:3]) == [("b", 3), ("c", 9)]
+    assert list(file[2:]) == [("c", 9), ("d", 4)]
+    assert list(file[:3]) == [("a", 1), ("b", 3), ("c", 9)]

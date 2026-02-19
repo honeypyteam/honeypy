@@ -8,6 +8,7 @@ projects) implement the abstract loading and unloading behaviour.
 
 import json
 from abc import ABC, abstractmethod
+from itertools import islice
 from pathlib import Path
 from typing import (
     Any,
@@ -57,6 +58,7 @@ class HoneyNode(ABC, Generic[M]):
 
     # Kept in metadata and used in parent-child dynamic construction
     CLASS_UUID: UUID
+    ARITY: int = 1
 
     _uuid: UUID
 
@@ -200,6 +202,16 @@ class HoneyNode(ABC, Generic[M]):
             self._loaded = False
 
     @property
+    def arity(self) -> int:
+        """
+        int: Returns the dimensionality of the data.
+
+        Often this represents the number of modalities. The data inside the node is
+        represented as a tuple of length `self.arity`
+        """
+        return self.ARITY
+
+    @property
     def loaded(self) -> bool:
         """bool: True if the node has been loaded (metadata and children)."""
         return self._loaded
@@ -315,6 +327,8 @@ class HoneyNode(ABC, Generic[M]):
 
     def __len__(self) -> int:
         """Return the number of children currently attached to the node."""
+        if not self.loaded:
+            raise NotImplementedError()  # TODO: add opt-in handling if not loaded
         return len(self._children)
 
     def __iter__(self) -> Iterator[Any]:
@@ -326,6 +340,47 @@ class HoneyNode(ABC, Generic[M]):
             Child objects contained by the node.
         """
         return iter(self._children)
+
+    def __getitem__(self, idx):
+        if idx is ...:
+            return self.__getitem__(slice(None))
+
+        if isinstance(idx, int):
+            if idx < 0:
+                return list(self)[idx]
+            try:
+                return next(islice(iter(self), idx, idx + 1))
+            except StopIteration:
+                raise IndexError("index out of range")
+
+        if isinstance(idx, slice):
+            start = idx.start or 0
+            stop = idx.stop or len(self)
+
+            return islice(iter(self), start, stop, idx.step)
+        if isinstance(idx, tuple):
+            if len(idx) == 1:
+                return self.__getitem__(idx[0])
+
+            if len(idx) > 1 and self.arity == 1:
+                raise ValueError("Cannot take multidimensional slice of a 1D object")
+
+            if len(idx) > 2:
+                # TODO: There is in fact an interpretation of such high dimensional
+                # slices. It involves drilling down to the child nodes, so that e.g.,
+                # col[:,:,:] for an ND collection could give an `islice`` of 1D
+                # file points, and e.g., col[:,:,:] for a 1D collection could give an
+                # `islice` of N-dimensional file points. Notably, project[...] would
+                # give every point in the project(!!!). It's elegant, but complex
+                raise NotImplementedError()
+
+            match idx:
+                case int() as x, y:
+                    return self[x][y]
+                case x, y:
+                    return (p[y] for p in self[x])
+                case _:
+                    raise NotImplementedError()
 
     def __eq__(self, other: Any) -> bool:
         """Equality based on node id."""
