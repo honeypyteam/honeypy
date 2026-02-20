@@ -93,7 +93,7 @@ class Pullback(HoneyTransform):
         node_2: HoneyNode,
         map_1: Callable,
         map_2: Optional[Callable] = None,
-    ) -> HoneyNode[Any]:
+    ) -> HoneyNode[Any, Any]:
         """Compute the pullback (inner join) between this node and ``other``.
 
         Both nodes are loaded if necessary. ``map_1`` is applied to each child of
@@ -163,7 +163,7 @@ class Pullback(HoneyTransform):
                     else:
                         joined.append((*self_child, *other_child))
 
-        class _JoinNode(HoneyNode[Any]):
+        class _JoinNode(HoneyNode[Any, Any]):
             # TODO: refactor to not require the join node. Need to do a lot of work here
             ARITY = node_2.arity + node_1.arity
 
@@ -231,7 +231,7 @@ class Pullback(HoneyTransform):
                 else:
                     joined.append((*child, *match))
 
-        class _JoinNode(HoneyNode[Any]):
+        class _JoinNode(HoneyNode[Any, Any]):
             ARITY = node_2.arity + node_1.arity
 
             # TODO: refactor to not require the join node. Need to do a lot of work here

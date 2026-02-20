@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Any, TypeAlias, TypedDict
+from typing import Any, Literal, TypeAlias, TypedDict
 from uuid import UUID
 
 from honeypy.metagraph.honey_project import HoneyProject
@@ -16,7 +16,9 @@ class Metadata(TypedDict):
     project_name: str
 
 
-class KeyValProject(HoneyProject[Metadata, KeyVarCollections]):
+class KeyValProject(
+    HoneyProject[Literal["Keys and Vals"], Metadata, KeyVarCollections]
+):
     CLASS_UUID = UUID("a7ef3443-6339-4a95-a0c0-73d477ead1d2")
 
     def __init__(self, principal_parent: HoneyNode, *, load: bool = False):

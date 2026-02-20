@@ -1,11 +1,22 @@
 from pathlib import Path
-from typing import Any, Generic, List, Mapping, Tuple, TypedDict, TypeVar
+from typing import (
+    Any,
+    Generic,
+    List,
+    Literal,
+    LiteralString,
+    Mapping,
+    Tuple,
+    TypedDict,
+    TypeVar,
+)
 from uuid import UUID
 
 from honeypy.metagraph.honey_file import HoneyFile
 
 T = TypeVar("T")
 M = TypeVar("M", bound=Mapping[str, Any])
+L = TypeVar("L", bound=LiteralString)
 
 
 # I could TypeAlias here but type checkers aren't very explicit in the type then
@@ -21,7 +32,7 @@ class BoolMetadata(TypedDict):
     filename: str
 
 
-class KeyValFile(HoneyFile[M, Tuple[str, T]], Generic[M, T]):
+class KeyValFile(HoneyFile[L, M, Tuple[str, T]], Generic[L, M, T]):
     def _unload(self) -> None:
         return
 
@@ -44,7 +55,7 @@ class KeyValFile(HoneyFile[M, Tuple[str, T]], Generic[M, T]):
                 fh.write(f"{key!s},{val!s}\n")  # type: ignore
 
 
-class KeyIntFile(KeyValFile[IntMetadata, int]):
+class KeyIntFile(KeyValFile[Literal["integers"], IntMetadata, int]):
     CLASS_UUID = UUID("a1c9bef2-846c-4003-a357-3639628d6d13")
 
     @staticmethod
@@ -61,7 +72,7 @@ class KeyIntFile(KeyValFile[IntMetadata, int]):
         return pts
 
 
-class KeyStrFile(KeyValFile[StrMetadata, str]):
+class KeyStrFile(KeyValFile[Literal["strings"], StrMetadata, str]):
     CLASS_UUID = UUID("45cd53b2-8d48-4f07-b560-3d0142a8d626")
 
     @staticmethod
@@ -78,7 +89,7 @@ class KeyStrFile(KeyValFile[StrMetadata, str]):
         return pts
 
 
-class KeyBoolFile(KeyValFile[BoolMetadata, bool]):
+class KeyBoolFile(KeyValFile[Literal["bools"], BoolMetadata, bool]):
     CLASS_UUID = UUID("1d413ff9-1ce1-443a-ba5b-c5e8f878253c")
 
     @staticmethod

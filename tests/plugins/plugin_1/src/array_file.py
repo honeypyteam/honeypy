@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Iterable, Iterator, List, Tuple, TypeAlias, TypedDict
+from typing import Any, Iterable, Iterator, List, Literal, Tuple, TypeAlias, TypedDict
 from uuid import UUID
 
 from honeypy.metagraph.adapters import LoadableMixin
@@ -52,7 +52,10 @@ class Metadata(TypedDict):
     filename: str
 
 
-class ArrayFile(LoadableMixin[ExternalArray], HoneyFile[Metadata, InternalArrayRow]):
+class ArrayFile(
+    LoadableMixin[ExternalArray],
+    HoneyFile[Literal["numbers"], Metadata, InternalArrayRow],
+):
     """
     A file that works with arrays directly.
 
