@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.11.0](https://github.com/honeypyteam/honeypy/compare/v0.10.0...v0.11.0) (2026-02-20)
+
+
+### Features
+
+* add node labels ([c70d8be](https://github.com/honeypyteam/honeypy/commit/c70d8bed7a477f912f4ed936fdc92c9732d91af5))
+
 ## [0.10.0](https://github.com/honeypyteam/honeypy/compare/v0.9.0...v0.10.0) (2026-02-19)
 
 
