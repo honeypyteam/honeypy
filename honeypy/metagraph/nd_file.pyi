@@ -1,6 +1,15 @@
 from abc import ABC
 from pathlib import Path
-from typing import Any, Generic, Mapping, Tuple, TypeVar, TypeVarTuple, Unpack
+from typing import (
+    Any,
+    Generic,
+    LiteralString,
+    Mapping,
+    Tuple,
+    TypeVar,
+    TypeVarTuple,
+    Unpack,
+)
 
 from honeypy.metagraph.meta.honey_node import HoneyNode
 
@@ -8,15 +17,16 @@ from .stubs import IndexableNDFile
 
 Ts = TypeVarTuple("Ts")
 M = TypeVar("M", bound=Tuple[Mapping[str, Any], ...])
+L = TypeVar("L", bound=Tuple[LiteralString, ...])
 A = TypeVar("A")
 B = TypeVar("B")
 C = TypeVar("C")
 D = TypeVar("D")
 
 class NDHoneyFile(
-    Generic[M, Unpack[Ts]],
+    Generic[L, M, Unpack[Ts]],
     IndexableNDFile[Unpack[Ts]],
-    HoneyNode[M],
+    HoneyNode[L, M],
     ABC,
 ):
     @staticmethod

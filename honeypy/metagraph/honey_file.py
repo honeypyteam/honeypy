@@ -29,6 +29,7 @@ from typing import (
     Iterable,
     Iterator,
     List,
+    LiteralString,
     Mapping,
     Optional,
     TypeVar,
@@ -40,9 +41,10 @@ from honeypy.metagraph.meta.raw_metadata import RawMetadata
 
 P_co = TypeVar("P_co", covariant=True)
 M = TypeVar("M", bound=Mapping[str, Any])
+L = TypeVar("L", bound=LiteralString)
 
 
-class HoneyFile(Generic[M, P_co], HoneyNode[M], ABC):
+class HoneyFile(Generic[L, M, P_co], HoneyNode[L, M], ABC):
     """Represents a single file node containing point-like items."""
 
     @property

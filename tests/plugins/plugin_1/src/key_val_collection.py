@@ -4,6 +4,7 @@ from typing import (
     Any,
     Generic,
     Literal,
+    LiteralString,
     Optional,
     Type,
     TypedDict,
@@ -27,9 +28,10 @@ class Metadata(TypedDict):
 
 
 T = TypeVar("T", bound=HoneyFile)
+L = TypeVar("L", bound=LiteralString)
 
 
-class KeyValCollection(HoneyCollection[Metadata, T], Generic[T]):
+class KeyValCollection(HoneyCollection[L, Metadata, T], Generic[L, T]):
     def __init__(
         self,
         principal_parent: HoneyNode,
@@ -69,7 +71,7 @@ class KeyValCollection(HoneyCollection[Metadata, T], Generic[T]):
         return parent_location / metadata["folder_name"]
 
 
-class KeyIntCollection(KeyValCollection[KeyIntFile]):
+class KeyIntCollection(KeyValCollection[Literal["ints"], KeyIntFile]):
     CLASS_UUID = UUID("2aab4e79-abde-4cd8-9559-aa1d3dcea56e")
 
     def _get_class(self) -> Type[KeyIntFile]:
@@ -87,7 +89,7 @@ class KeyIntCollection(KeyValCollection[KeyIntFile]):
         }
 
 
-class KeyStrCollection(KeyValCollection[KeyStrFile]):
+class KeyStrCollection(KeyValCollection[Literal["strings"], KeyStrFile]):
     CLASS_UUID = UUID("35f33923-cd77-4ba1-95b9-654611846dcf")
 
     def _get_class(self) -> Type[KeyStrFile]:

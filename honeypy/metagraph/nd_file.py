@@ -15,6 +15,7 @@ from typing import (
     Generic,
     Iterable,
     Iterator,
+    LiteralString,
     Mapping,
     Tuple,
     TypeVar,
@@ -26,13 +27,14 @@ from honeypy.metagraph.meta.honey_node import HoneyNode
 
 Ts = TypeVarTuple("Ts")
 M = TypeVar("M", bound=Tuple[Mapping[str, Any], ...])
+L = TypeVar("L", bound=Tuple[LiteralString, ...])
 A = TypeVar("A")
 B = TypeVar("B")
 C = TypeVar("C")
 D = TypeVar("D")
 
 
-class NDHoneyFile(Generic[M, Unpack[Ts]], HoneyNode[M]):
+class NDHoneyFile(Generic[L, M, Unpack[Ts]], HoneyNode[L, M]):
     """Represents a single file node containing point-like items."""
 
     @property
@@ -40,7 +42,7 @@ class NDHoneyFile(Generic[M, Unpack[Ts]], HoneyNode[M]):
         """Iterable[Tuple[Unpack[Ts]]]: Live iterable view of the node's children."""
         return super().children
 
-    def __iter__(self: "NDHoneyFile[M, Unpack[Ts]]") -> Iterator[Tuple[Unpack[Ts]]]:
+    def __iter__(self: "NDHoneyFile[L, M, Unpack[Ts]]") -> Iterator[Tuple[Unpack[Ts]]]:
         """Call super().__iter__."""
         return super().__iter__()
 

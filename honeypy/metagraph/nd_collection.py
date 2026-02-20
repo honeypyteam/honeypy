@@ -25,6 +25,7 @@ from typing import (
     Generic,
     Iterable,
     Iterator,
+    LiteralString,
     Mapping,
     Tuple,
     TypeVar,
@@ -36,9 +37,10 @@ from honeypy.metagraph.meta.honey_node import HoneyNode
 
 Ts = TypeVarTuple("Ts")
 M = TypeVar("M", bound=Tuple[Mapping[str, Any], ...])
+L = TypeVar("L", bound=Tuple[LiteralString, ...])
 
 
-class NDHoneyCollection(Generic[M, Unpack[Ts]], HoneyNode[M]):
+class NDHoneyCollection(Generic[L, M, Unpack[Ts]], HoneyNode[L, M]):
     """A collection of HoneyFile nodes.
 
     Parameters
@@ -61,7 +63,7 @@ class NDHoneyCollection(Generic[M, Unpack[Ts]], HoneyNode[M]):
         return super().children
 
     def __iter__(
-        self: "NDHoneyCollection[M, Unpack[Ts]]",
+        self: "NDHoneyCollection[L, M, Unpack[Ts]]",
     ) -> Iterator[Tuple[Unpack[Ts]]]:
         """Call super().__iter__."""
         return super().__iter__()

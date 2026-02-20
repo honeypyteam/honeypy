@@ -17,6 +17,7 @@ from typing import (
     Iterable,
     Iterator,
     List,
+    LiteralString,
     Mapping,
     Optional,
     Set,
@@ -29,14 +30,14 @@ from uuid import UUID, uuid4
 
 from honeypy.metagraph.meta.raw_metadata import RawMetadata
 
+L = TypeVar("L", bound=LiteralString | Tuple[LiteralString, ...])
 M = TypeVar("M", bound=Mapping[str, Any] | Tuple[Mapping[str, Any], ...])
-
 
 # registry for auto-registered node classes keyed by CLASS_UUID
 _CLASS_REGISTRY: Dict[UUID, Type["HoneyNode"]] = {}
 
 
-class HoneyNode(ABC, Generic[M]):
+class HoneyNode(ABC, Generic[L, M]):
     """Abstract base node for the metagraph.
 
     A HoneyNode manages a set of child objects (``T``) and exposes a small
