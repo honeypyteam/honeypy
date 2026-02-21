@@ -13,7 +13,6 @@ def test_honey_file_as_adapter(plugin: PluginGetter):
         metadata={
             "filename": "3_1.csv",
         },
-        load=True,
     )
 
     with file.data() as data:

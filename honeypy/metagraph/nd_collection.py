@@ -23,8 +23,6 @@ ND shapes.
 from typing import (
     Any,
     Generic,
-    Iterable,
-    Iterator,
     LiteralString,
     Mapping,
     Tuple,
@@ -40,30 +38,5 @@ M = TypeVar("M", bound=Tuple[Mapping[str, Any], ...])
 L = TypeVar("L", bound=Tuple[LiteralString, ...])
 
 
-class NDHoneyCollection(Generic[L, M, Unpack[Ts]], HoneyNode[L, M]):
-    """A collection of HoneyFile nodes.
-
-    Parameters
-    ----------
-    location : pathlib.Path
-        Filesystem path to the collection root (directory containing files).
-    load : bool, optional
-        If True, the collection will be loaded during initialization. Defaults
-        to False.
-
-    Attributes
-    ----------
-    _location : pathlib.Path
-        The filesystem location backing this collection.
-    """
-
-    @property
-    def children(self) -> Iterable[Tuple[Unpack[Ts]]]:
-        """Iterable[Tuple[Unpack[Ts]]]: Live iterable view of the node's children."""
-        return super().children
-
-    def __iter__(
-        self: "NDHoneyCollection[L, M, Unpack[Ts]]",
-    ) -> Iterator[Tuple[Unpack[Ts]]]:
-        """Call super().__iter__."""
-        return super().__iter__()
+class NDHoneyCollection(Generic[L, M, Unpack[Ts]], HoneyNode[L, M, Tuple[Unpack[Ts]]]):
+    """A collection of HoneyFile nodes."""

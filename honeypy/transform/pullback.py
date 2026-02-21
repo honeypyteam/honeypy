@@ -28,15 +28,12 @@ from pathlib import Path
 from typing import (
     Any,
     Callable,
-    Dict,
-    Iterable,
-    List,
+    Iterator,
     Mapping,
     Optional,
     TypeVar,
     TypeVarTuple,
 )
-from uuid import UUID
 
 from honeypy.metagraph.honey_file import HoneyFile
 from honeypy.metagraph.meta.honey_node import HoneyNode
@@ -53,6 +50,39 @@ Ts = TypeVarTuple("Ts")
 M1 = TypeVar("M1", bound=Mapping[str, Any])
 M2 = TypeVar("M2", bound=Mapping[str, Any])
 Mt = TypeVarTuple("Mt")
+
+
+class _JoinNode(HoneyNode[Any, Any, Any]):
+    # TODO: refactor to not require the join node. Need to do a lot of work here
+    _iter_func: Callable[[], Iterator[Any]]
+
+    def __init__(
+        self,
+        principal_parent: HoneyNode,
+        arity: int,
+        iter_func: Callable[[], Iterator[Any]],
+        metadata=None,
+    ):
+        self._iter_func = iter_func
+        self.ARITY = arity
+        super().__init__(principal_parent, metadata=metadata or {})
+
+    # TODO: Think about how to combine metadata
+    # Likely add as generic on HoneyNode. Makes it easier to union for instance
+    @staticmethod
+    def _parse_metadata(raw_metadata: Any) -> Any:
+        return {}
+
+    @staticmethod
+    def _serialise_metadata(metadata: Any) -> Any:
+        return {}
+
+    @staticmethod
+    def _locator(parent_location: Path, metadata: Optional[Any] = None) -> Path:
+        return Path(".")
+
+    def __iter__(self) -> Iterator[Any]:
+        return self._iter_func()
 
 
 class Pullback(HoneyTransform):
@@ -93,13 +123,8 @@ class Pullback(HoneyTransform):
         node_2: HoneyNode,
         map_1: Callable,
         map_2: Optional[Callable] = None,
-    ) -> HoneyNode[Any, Any]:
+    ) -> HoneyNode[Any, Any, Any]:
         """Compute the pullback (inner join) between this node and ``other``.
-
-        Both nodes are loaded if necessary. ``map_1`` is applied to each child of
-        ``self`` and ``map_2`` is applied to each child of ``other``; any pair of
-        children whose mapped keys compare equal are paired and included in the
-        result.
 
         This method supports N-dimensional inputs. When joining an N-dimensional
         node the joined children are tuples whose arity reflects the
@@ -117,10 +142,9 @@ class Pullback(HoneyTransform):
         map_2 : Callable
             Function applied to children of ``other`` to compute join keys.
 
-        Returns
         -------
         HoneyNode
-            A loaded in-memory node whose children are tuples representing
+            A node whose children are tuples representing
             matched items from the two inputs. Tuple shape depends on the
             dimensionality of the operands.
 
@@ -131,12 +155,6 @@ class Pullback(HoneyTransform):
         - Static typing is provided by overloads; the runtime result is a
           lightweight in-memory node populated with the joined tuples.
         """
-        if not node_1._loaded:
-            node_1.load()
-
-        if not node_2._loaded:
-            node_2.load()
-
         if map_2 is None:
             return self._pullback_predicate(node_1, node_2, map_1)
 
@@ -149,122 +167,61 @@ class Pullback(HoneyTransform):
         predicate: Callable[[Any, Any], bool],
     ) -> HoneyNode:
         """Perform a pullback by using a predicate over points from two domains."""
-        joined: List[tuple[Any, Any]] = []
 
-        for self_child in node_1:
-            for other_child in node_2:
-                if predicate(self_child, other_child):
-                    if node_1.arity == 1 and node_2.arity == 1:
-                        joined.append((self_child, other_child))
-                    elif node_1.arity != 1 and node_2.arity == 1:
-                        joined.append((*self_child, other_child))
-                    elif node_2.arity == 1 and node_2.arity != 1:
-                        joined.append((self_child, *other_child))
-                    else:
-                        joined.append((*self_child, *other_child))
+        def iter_func() -> Iterator[Any]:
+            for self_child in node_1:
+                for other_child in node_2:
+                    if predicate(self_child, other_child):
+                        if node_1.arity == 1 and node_2.arity == 1:
+                            yield (self_child, other_child)
+                        elif node_1.arity != 1 and node_2.arity == 1:
+                            yield (*self_child, other_child)
+                        elif node_2.arity == 1 and node_2.arity != 1:
+                            yield (self_child, *other_child)
+                        else:
+                            yield (*self_child, *other_child)
 
-        class _JoinNode(HoneyNode[Any, Any]):
-            # TODO: refactor to not require the join node. Need to do a lot of work here
-            ARITY = node_2.arity + node_1.arity
-
-            def __init__(self, children, metadata=None):
-                super().__init__(
-                    node_1._principal_parent, load=False, metadata=metadata or {}
-                )
-                self._children = children
-                self._loaded = True
-
-            def _load(
-                self, raw_children_metadata: Optional[Dict[UUID, Any]] = None
-            ) -> Iterable[Any]:
-                return self._children
-
-            def _unload(self) -> None:
-                self._children = []
-
-            # TODO: Think about how to combine metadata
-            # Likely add as generic on HoneyNode. Makes it easier to union for instance
-            @staticmethod
-            def _parse_metadata(raw_metadata: Any) -> Any:
-                return {}
-
-            @staticmethod
-            def _serialise_metadata(metadata: Any) -> Any:
-                return {}
-
-            @staticmethod
-            def _locator(parent_location: Path, metadata: Optional[Any] = None) -> Path:
-                return Path(".")
-
-            def _save(self, location: Path, metadata: Any) -> None:
-                pass
-
-        return _JoinNode(joined, metadata=(node_1.metadata, node_2.metadata))
+        return _JoinNode(
+            node_1._principal_parent,
+            node_1.arity + node_2.arity,
+            iter_func,
+            metadata=(node_1.metadata, node_2.metadata),
+        )
 
     def _pullback_projection(
         self, node_1: HoneyNode, node_2: HoneyNode, map_1: Callable, map_2: Callable
     ) -> "HoneyNode":
         """Perform a pullback by using two functions with a common codomain."""
-        index: dict[Any, list[Any]] = {}
-        for child in node_2:
-            try:
-                key = map_2(child)
-            except Exception as e:
-                print(f"Problem mapping other child {child!r}: {e!r}")
-                continue
-            index.setdefault(key, []).append(child)
 
-        joined: List[tuple[Any, Any]] = []
-        for child in node_1:
-            try:
-                key = map_1(child)
-            except Exception as e:
-                print(f"Problem mapping self child {child!r}: {e!r}")
-                continue
-            for match in index.get(key, []):
-                if node_1.arity == 1 and node_2.arity == 1:
-                    joined.append((child, match))
-                elif node_1.arity != 1 and node_2.arity == 1:
-                    joined.append((*child, match))
-                elif node_1.arity == 1 and node_2.arity != 1:
-                    joined.append((child, *match))
-                else:
-                    joined.append((*child, *match))
+        def iter_func() -> Iterator[Any]:
+            index: dict[Any, list[Any]] = {}
+            for child in node_2:
+                try:
+                    key = map_2(child)
+                except Exception as e:
+                    print(f"Problem mapping other child {child!r}: {e!r}")
+                    continue
+                index.setdefault(key, []).append(child)
 
-        class _JoinNode(HoneyNode[Any, Any]):
-            ARITY = node_2.arity + node_1.arity
+            for child in node_1:
+                try:
+                    key = map_1(child)
+                except Exception as e:
+                    print(f"Problem mapping self child {child!r}: {e!r}")
+                    continue
+                for match in index.get(key, []):
+                    if node_1.arity == 1 and node_2.arity == 1:
+                        yield (child, match)
+                    elif node_1.arity != 1 and node_2.arity == 1:
+                        yield (*child, match)
+                    elif node_1.arity == 1 and node_2.arity != 1:
+                        yield (child, *match)
+                    else:
+                        yield (*child, *match)
 
-            # TODO: refactor to not require the join node. Need to do a lot of work here
-            def __init__(self, children, metadata=None):
-                super().__init__(
-                    node_1._principal_parent, load=False, metadata=metadata or {}
-                )
-                self._children = children
-                self._loaded = True
-
-            def _load(
-                self, raw_children_metadata: Optional[Dict[UUID, Any]] = None
-            ) -> Iterable[Any]:
-                return self._children
-
-            def _unload(self) -> None:
-                self._children = []
-
-            # TODO: Think about how to combine metadata
-            # Likely add as generic on HoneyNode. Makes it easier to union for instance
-            @staticmethod
-            def _parse_metadata(raw_metadata: Any) -> Any:
-                return {}
-
-            @staticmethod
-            def _serialise_metadata(metadata: Any) -> Any:
-                return {}
-
-            @staticmethod
-            def _locator(parent_location: Path, metadata: Optional[Any] = None) -> Path:
-                return Path(".")
-
-            def _save(self, location: Path, metadata: Any) -> None:
-                pass
-
-        return _JoinNode(joined, metadata=(node_1.metadata, node_2.metadata))
+        return _JoinNode(
+            node_1._principal_parent,
+            node_1.arity + node_2.arity,
+            iter_func,
+            metadata=(node_1.metadata, node_2.metadata),
+        )

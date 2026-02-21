@@ -21,12 +21,8 @@ class KeyValProject(
 ):
     CLASS_UUID = UUID("a7ef3443-6339-4a95-a0c0-73d477ead1d2")
 
-    def __init__(self, principal_parent: HoneyNode, *, load: bool = False):
-        super().__init__(principal_parent, load=load)
-
-    def _unload(self) -> None:
-        for child in self._children:
-            child.unload()
+    def __init__(self, principal_parent: HoneyNode):
+        super().__init__(principal_parent)
 
     @staticmethod
     def _parse_metadata(raw_metadata: Any) -> Metadata:
@@ -39,6 +35,3 @@ class KeyValProject(
     @staticmethod
     def _locator(parent_location: Path, metadata: Metadata) -> Path:
         return parent_location
-
-    def _save(self, location: Path, metadata: Metadata) -> None:
-        return

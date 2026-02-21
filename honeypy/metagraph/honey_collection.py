@@ -16,8 +16,6 @@ can be loaded lazily (via the `load` mechanism on HoneyNode).
 from typing import (
     Any,
     Generic,
-    Iterable,
-    Iterator,
     LiteralString,
     Mapping,
     TypeVar,
@@ -31,28 +29,5 @@ M = TypeVar("M", bound=Mapping[str, Any])
 L = TypeVar("L", bound=LiteralString)
 
 
-class HoneyCollection(Generic[L, M, F], HoneyNode[L, M]):
-    """A collection of HoneyFile nodes.
-
-    Parameters
-    ----------
-    location : pathlib.Path
-        Filesystem path to the collection root (directory containing files).
-    load : bool, optional
-        If True, the collection will be loaded during initialization. Defaults
-        to False.
-
-    Attributes
-    ----------
-    _location : pathlib.Path
-        The filesystem location backing this collection.
-    """
-
-    @property
-    def children(self) -> Iterable[F]:
-        """Iterable[F]: Live iterable view of the node's children."""
-        return super().children
-
-    def __iter__(self: "HoneyCollection[L, M, F]") -> Iterator[F]:
-        """Call super().__iter__."""
-        return super().__iter__()
+class HoneyCollection(Generic[L, M, F], HoneyNode[L, M, F]):
+    """A collection of HoneyFile nodes."""

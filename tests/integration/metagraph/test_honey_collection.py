@@ -11,10 +11,8 @@ def test_honey_collection_using_metadata(plugin: PluginGetter):
     project = VirtualNode(location=location)
 
     collection = KeyIntCollection(
-        project, load=True, uuid=UUID("17c5a2df-8ab9-40f3-92d0-a3e6aabb2b98")
+        project, uuid=UUID("17c5a2df-8ab9-40f3-92d0-a3e6aabb2b98")
     )
-
-    assert collection.loaded
 
     assert {
         (file.location.name, key, value) for file in collection for key, value in file

@@ -7,7 +7,7 @@ locations without touching disk layout rules of real parents.
 """
 
 from pathlib import Path
-from typing import Any, Dict, Iterable, Optional, TypedDict
+from typing import Any, Dict, Iterator, Literal, Optional, TypedDict
 from uuid import UUID
 
 from honeypy.metagraph.meta.honey_node import HoneyNode
@@ -19,7 +19,7 @@ class Metadata(TypedDict):
     location: Path
 
 
-class VirtualNode(HoneyNode):
+class VirtualNode(HoneyNode[Literal[""], Metadata, None]):
     """A node at the top of the data hierarchy."""
 
     _metadata: Metadata
@@ -27,12 +27,8 @@ class VirtualNode(HoneyNode):
     def __init__(
         self,
         location: Path,
-        *,
-        load: bool | None = False,
     ) -> None:
-        super().__init__(
-            principal_parent=self, metadata={"location": location}, load=load
-        )
+        super().__init__(principal_parent=self, metadata={"location": location})
 
     @property
     def location(self) -> Path:
@@ -43,15 +39,10 @@ class VirtualNode(HoneyNode):
         """
         return self._metadata["location"]
 
-    def _load(
+    def _load_children(
         self, raw_children_metadata: Optional[Dict[UUID, Any]] = None
-    ) -> Iterable[Any]:
-        """Return `None`."""
-        return [None]
-
-    def _unload(self) -> None:
-        """Do nothing."""
-        pass
+    ) -> Iterator[None]:
+        yield None
 
     @staticmethod
     def _parse_metadata(raw_metadata: Any) -> Metadata:
@@ -68,5 +59,5 @@ class VirtualNode(HoneyNode):
         """Return the location of this node from the metadata directly."""
         return metadata["location"]
 
-    def _save(self, location: Path, metadata: Any) -> None:
-        pass
+    def __iter__(self) -> Iterator[None]:
+        yield None

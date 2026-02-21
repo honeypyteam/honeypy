@@ -5,34 +5,21 @@ representation of its children (for example: a NumPy array, pandas object,
 or any heavy container) and persist changes automatically when used as a
 context manager.
 
-Public API
-- LoadableMixin.data() -> context manager that yields the in-memory object and
-  calls load_from(...) on normal exit.
-- LoadableMixin.get_data() and LoadableMixin.load_from(...) bridge between the
-  node's children and the in-memory container; subclasses implement the static
-  helpers _get_data and _load_from.
-
 Usage
     with node.data() as data:
         # mutate/use data
         ...
     # on exit, changes are persisted via load_from
-
-Notes
------
-- Designed for optional adapter implementations; keep heavy dependencies out of
-  the core package. Implementations should prefer provider factories / context
-  managers for resource safety when streaming from files.
 """
 
 from abc import ABC, abstractmethod
-from typing import Any, Generic, Iterable, TypeVar
+from typing import Generic, Iterator, Optional, TypeVar
 
-T = TypeVar("T")
-U = TypeVar("U")
+P_co = TypeVar("P_co", covariant=True)
+E = TypeVar("E")
 
 
-class _LoadableContextManager(Generic[U]):
+class _LoadableContextManager(Generic[E, P_co]):
     """
     Context manager used by LoadableMixin.data().
 
@@ -49,15 +36,17 @@ class _LoadableContextManager(Generic[U]):
       with (data, exc_type, exc_value, traceback). Exceptions are not suppressed.
     """
 
-    _parent: "LoadableMixin"
-    _data: U
+    _parent: "LoadableMixin[E, P_co]"
+    _data: E
 
-    def __init__(self, parent: "LoadableMixin[U]") -> None:
+    def __init__(self, parent: "LoadableMixin[E, P_co]") -> None:
         self._parent = parent
-        self._data = parent.get_data()
+        self._data = parent.get_external_data()
 
-    def __enter__(self) -> U:
+    def __enter__(self) -> E:
         """Enter the context and return the loaded in-memory data object."""
+        base_iter = iter(self._parent)
+        self._data = self._parent._get_data(base_iter)
         return self._data
 
     def __exit__(self, exc_type, exc_value, traceback):
@@ -66,7 +55,7 @@ class _LoadableContextManager(Generic[U]):
         Return False so exceptions (if any) propagate.
         """
         if exc_type is None:
-            self._parent.load_from(self._data)
+            self._parent._external_data = self._data  # type: ignore
             return False
 
         hook = getattr(self._parent, "on_context_error", None)
@@ -80,55 +69,40 @@ class _LoadableContextManager(Generic[U]):
         return False
 
 
-class LoadableMixin(ABC, Generic[T]):
+class LoadableMixin(ABC, Generic[E, P_co]):
     """
     Mixin to expose an in-memory container view for a HoneyNode subclass.
-
-    Subclasses must implement:
-      - _get_data(children) -> T: build an in-memory representation from children.
-      - _load_from(data) -> Iterable[Any]: convert in-memory data back into children.
 
     Public API:
       - data() -> _DataContext[T]: context manager yielding the in-memory object and
         persisting it on normal exit via load_from.
-
-    Notes
-    -----
-    - The context manager returns a fresh in-memory object produced by get_data().
-    - load_from delegates to the HoneyNode.load mechanism; implementations should
-      return an iterable of child items suitable for the base class loader.
     """
 
-    def data(self) -> "_LoadableContextManager[T]":
+    _external_data: Optional[E] = None
+
+    def data(self) -> "_LoadableContextManager[E, P_co]":
         """Return a context manager that yields the in-memory data and saves on exit."""
-        return _LoadableContextManager[T](self)
+        return _LoadableContextManager[E, P_co](self)
 
-    def load_from(self, data: T) -> None:
-        """
-        Persist an in-memory data object by delegating to the base loader.
-
-        This converts `data` to an iterable of child items via _load_from and then
-        calls the base class `load` to replace the node's children.
-        """
-        # Pragmatic decision. Types must be ignored here because parent is `HoneyNode`,
-        # which is a template class. This means type info is lost, or else you'll have
-        # to write the formal type parameters (metadata, tuples) each time you use a
-        # LoadableMixin
-        super().load(self._load_from(data))  # type: ignore
-
-    def get_data(self) -> T:
+    def get_external_data(self) -> E:
         """
         Return an in-memory object constructed from the node's children.
 
         This calls the subclass-provided _get_data with the current children
-        iterable. The returned object may be a view or a materialised container.
+        iterator. The returned object may be a view or a materialised container.
         """
-        # See note in `load_from` for type ignores
-        return self._get_data(self.children)  # type: ignore
+        return self._get_data(iter(self))  # type: ignore
+
+    def __iter__(self) -> Iterator[P_co]:
+        data = self._external_data
+        if data is not None:
+            return self.load_from(data)
+
+        return super().__iter__()  # type: ignore
 
     @staticmethod
     @abstractmethod
-    def _get_data(children: Iterable[Any]) -> T:
+    def _get_data(children: Iterator[P_co]) -> E:
         """
         Build and return the in-memory representation from the node's children.
 
@@ -138,11 +112,11 @@ class LoadableMixin(ABC, Generic[T]):
 
     @staticmethod
     @abstractmethod
-    def _load_from(data: T) -> Iterable[Any]:
+    def load_from(data: E) -> Iterator[P_co]:
         """
-        Convert an in-memory data object back into an iterable of child items.
+        Convert an in-memory data object back into an iterator of child items.
 
-        The returned iterable will be passed to the base `load` method to replace
+        The returned iterator will be passed to the base `load` method to replace
         the node's children.
         """
         raise NotImplementedError

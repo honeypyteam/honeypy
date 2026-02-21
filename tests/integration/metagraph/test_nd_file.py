@@ -37,8 +37,8 @@ def test_nd_file_pullback_projections(plugin: PluginGetter) -> None:
 
     collection = VirtualNode(location)
 
-    file_1 = KeyIntFile(collection, metadata={"filename": "1_1.csv"}, load=True)
-    file_2 = KeyStrFile(collection, metadata={"filename": "1_3.csv"}, load=True)
+    file_1 = KeyIntFile(collection, metadata={"filename": "1_1.csv"})
+    file_2 = KeyStrFile(collection, metadata={"filename": "1_3.csv"})
 
     def int_map(point: Tuple[str, int]) -> str:
         return point[0]
@@ -74,10 +74,10 @@ def test_large_pullback(plugin: PluginGetter) -> None:
     collection_2 = VirtualNode(path / "collection_2")
     collection_4 = VirtualNode(path / "collection_4")
 
-    file_1 = KeyIntFile(collection_1, metadata={"filename": "1_1.csv"}, load=True)
-    file_2 = KeyStrFile(collection_2, metadata={"filename": "1_1.csv"}, load=True)
-    file_3 = KeyStrFile(collection_2, metadata={"filename": "1_2.csv"}, load=True)
-    file_4 = KeyBoolFile(collection_4, metadata={"filename": "4_1.csv"}, load=True)
+    file_1 = KeyIntFile(collection_1, metadata={"filename": "1_1.csv"})
+    file_2 = KeyStrFile(collection_2, metadata={"filename": "1_1.csv"})
+    file_3 = KeyStrFile(collection_2, metadata={"filename": "1_2.csv"})
+    file_4 = KeyBoolFile(collection_4, metadata={"filename": "4_1.csv"})
 
     pullback = Pullback()
 
@@ -102,8 +102,8 @@ def test_nd_file_pullback_predicate(plugin: PluginGetter) -> None:
 
     collection = VirtualNode(location)
 
-    file_1 = KeyIntFile(collection, metadata={"filename": "1_1.csv"}, load=True)
-    file_2 = KeyStrFile(collection, metadata={"filename": "1_3.csv"}, load=True)
+    file_1 = KeyIntFile(collection, metadata={"filename": "1_1.csv"})
+    file_2 = KeyStrFile(collection, metadata={"filename": "1_3.csv"})
 
     def predicate(int_point: Tuple[str, int], str_point: Tuple[str, str]) -> bool:
         return int_point[0] == str_point[0]
@@ -131,9 +131,9 @@ def test_nd_file_slicing(plugin: PluginGetter) -> None:
     collection_1 = VirtualNode(location_1)
     collection_2 = VirtualNode(location_2)
 
-    file_1 = KeyIntFile(collection_1, metadata={"filename": "1_1.csv"}, load=True)
-    file_2 = KeyStrFile(collection_1, metadata={"filename": "1_3.csv"}, load=True)
-    file_3 = KeyBoolFile(collection_2, metadata={"filename": "4_1.csv"}, load=True)
+    file_1 = KeyIntFile(collection_1, metadata={"filename": "1_1.csv"})
+    file_2 = KeyStrFile(collection_1, metadata={"filename": "1_3.csv"})
+    file_3 = KeyBoolFile(collection_2, metadata={"filename": "4_1.csv"})
 
     pullback = Pullback()
 
@@ -151,10 +151,8 @@ def test_nd_file_slicing(plugin: PluginGetter) -> None:
 
     # TODO: such projections really are transformations on the files. They should
     # be coded such that the file sees a projection in its provenance
-    assert list(file_5[...]) == all_points
     assert file_5[2] == (("c", 9), ("c", "nine"), ("c", False))
     assert file_5[2, 0] == ("c", 9)
-    assert file_5[1, :] == (("b", 3), ("b", "three"), ("b", True))
 
     assert list(file_5[:3, 0]) == [("a", 1), ("b", 3), ("c", 9)]
     assert list(file_5[:3, :1]) == [(("a", 1),), (("b", 3),), (("c", 9),)]

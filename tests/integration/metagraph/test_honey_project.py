@@ -16,7 +16,7 @@ def test_honey_project_load_using_metadata(plugin: PluginGetter):
     path = plugin("plugin_1", copy=True) / "project"
     top_most_node = VirtualNode(path)
 
-    project = KeyValProject(top_most_node, load=True)
+    project = KeyValProject(top_most_node)
 
     assert {col.metadata["title"] for col in project} == {
         "collection 1",
