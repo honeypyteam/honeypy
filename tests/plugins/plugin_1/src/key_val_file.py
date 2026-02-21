@@ -1,8 +1,9 @@
+from abc import abstractmethod
 from pathlib import Path
 from typing import (
     Any,
     Generic,
-    List,
+    Iterator,
     Literal,
     LiteralString,
     Mapping,
@@ -33,9 +34,6 @@ class BoolMetadata(TypedDict):
 
 
 class KeyValFile(HoneyFile[L, M, Tuple[str, T]], Generic[L, M, T]):
-    def _unload(self) -> None:
-        return
-
     @staticmethod
     def _parse_metadata(raw_metadata: Any) -> M:
         return {"filename": str(raw_metadata["filename"])}  # type: ignore
@@ -48,60 +46,39 @@ class KeyValFile(HoneyFile[L, M, Tuple[str, T]], Generic[L, M, T]):
     def _locator(parent_location: Path, metadata: M) -> Path:
         return parent_location / metadata["filename"]
 
-    def _save(self, location: Path, metadata: M) -> None:
-        with location.open("w", encoding="utf-8") as fh:
-            fh.write("key,value\n")
-            for key, val in self.children:  # type: ignore
-                fh.write(f"{key!s},{val!s}\n")  # type: ignore
+    def iter_points(self) -> Iterator[Tuple[str, T]]:
+        with self.location.open("r", encoding="utf-8") as fh:
+            next(fh)
+
+            for line in fh:
+                key, val = line.rstrip("\n").split(",")
+                yield (key, self._cast_val(val))
+
+    @staticmethod
+    @abstractmethod
+    def _cast_val(val: str) -> T:
+        raise NotImplementedError
 
 
 class KeyIntFile(KeyValFile[Literal["integers"], IntMetadata, int]):
     CLASS_UUID = UUID("a1c9bef2-846c-4003-a357-3639628d6d13")
 
     @staticmethod
-    def _load_file(location: Path) -> List[Tuple[str, int]]:
-        pts: List[Tuple[str, int]] = []
-
-        with location.open("r", encoding="utf-8") as fh:
-            next(fh)
-
-            for line in fh:
-                key, val = line.rstrip("\n").split(",")
-                pts.append((key, int(val)))
-
-        return pts
+    def _cast_val(val: str) -> int:
+        return int(val)
 
 
 class KeyStrFile(KeyValFile[Literal["strings"], StrMetadata, str]):
     CLASS_UUID = UUID("45cd53b2-8d48-4f07-b560-3d0142a8d626")
 
     @staticmethod
-    def _load_file(location: Path) -> List[Tuple[str, str]]:
-        pts: List[Tuple[str, str]] = []
-
-        with location.open("r", encoding="utf-8") as fh:
-            next(fh)
-
-            for line in fh:
-                key, val = line.rstrip("\n").split(",")
-                pts.append((key, str(val)))
-
-        return pts
+    def _cast_val(val: str) -> str:
+        return val
 
 
 class KeyBoolFile(KeyValFile[Literal["bools"], BoolMetadata, bool]):
     CLASS_UUID = UUID("1d413ff9-1ce1-443a-ba5b-c5e8f878253c")
 
     @staticmethod
-    def _load_file(location: Path) -> List[Tuple[str, bool]]:
-        pts: List[Tuple[str, bool]] = []
-
-        with location.open("r", encoding="utf-8") as fh:
-            next(fh)
-
-            for line in fh:
-                key, val = line.rstrip("\n").split(",")
-
-                pts.append((key, val.lower() == "true"))
-
-        return pts
+    def _cast_val(val: str) -> bool:
+        return val.lower() == "true"

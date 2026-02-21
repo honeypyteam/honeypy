@@ -13,8 +13,6 @@ This module focuses on typing helpers and a small ND-aware convenience API.
 from typing import (
     Any,
     Generic,
-    Iterable,
-    Iterator,
     LiteralString,
     Mapping,
     Tuple,
@@ -30,29 +28,5 @@ M = TypeVar("M", bound=Tuple[Mapping[str, Any], ...])
 L = TypeVar("L", bound=Tuple[LiteralString, ...])
 
 
-class NDHoneyProject(Generic[L, M, Unpack[Ts]], HoneyNode[L, M]):
-    """Represents a single project node containing HoneyCollection items.
-
-    Parameters
-    ----------
-    *args, **kwargs
-        Arguments are forwarded to :class:`HoneyNode`. Concrete subclasses
-        typically accept a pathlib.Path ``location`` or similar and pass
-        ``load=True`` to auto-load children.
-
-    See Also
-    --------
-    honeypy.metagraph.meta.honey_node.HoneyNode
-        Base class that defines the load/unload/metadata contract.
-    """
-
-    @property
-    def children(self) -> Iterable[Tuple[Unpack[Ts]]]:
-        """Iterable[Tuple[Unpack[Ts]]]: Live iterable view of the node's children."""
-        return super().children
-
-    def __iter__(
-        self: "NDHoneyProject[L, M, Unpack[Ts]]",
-    ) -> Iterator[Tuple[Unpack[Ts]]]:
-        """Call super().__iter__."""
-        return super().__iter__()
+class NDHoneyProject(Generic[L, M, Unpack[Ts]], HoneyNode[L, M, Tuple[Unpack[Ts]]]):
+    """Represents a single project node containing HoneyCollection items."""

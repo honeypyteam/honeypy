@@ -37,14 +37,9 @@ class KeyValCollection(HoneyCollection[L, Metadata, T], Generic[L, T]):
         principal_parent: HoneyNode,
         *,
         metadata: Optional[Metadata] = None,
-        load: bool = False,
         uuid: Optional[UUID] = None,
     ):
-        super().__init__(principal_parent, metadata=metadata, load=load, uuid=uuid)
-
-    def _unload(self) -> None:
-        for child in self._children:
-            child.unload()
+        super().__init__(principal_parent, metadata=metadata, uuid=uuid)
 
     @staticmethod
     def _parse_metadata(raw_metadata: Any) -> Metadata:
@@ -59,9 +54,6 @@ class KeyValCollection(HoneyCollection[L, Metadata, T], Generic[L, T]):
 
     def _get_class(self) -> Any:
         raise NotImplementedError
-
-    def _save(self, location: Path, metadata: Metadata) -> None:
-        return
 
     @staticmethod
     def _locator(

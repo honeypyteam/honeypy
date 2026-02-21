@@ -26,7 +26,7 @@ D = TypeVar("D")
 class NDHoneyFile(
     Generic[L, M, Unpack[Ts]],
     IndexableNDFile[Unpack[Ts]],
-    HoneyNode[L, M],
+    HoneyNode[L, M, Tuple[Unpack[Ts]]],
     ABC,
 ):
     @staticmethod

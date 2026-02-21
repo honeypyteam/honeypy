@@ -21,14 +21,12 @@ Behaviour
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from pathlib import Path
 from typing import (
     Any,
     Dict,
     Generic,
     Iterable,
     Iterator,
-    List,
     LiteralString,
     Mapping,
     Optional,
@@ -44,30 +42,20 @@ M = TypeVar("M", bound=Mapping[str, Any])
 L = TypeVar("L", bound=LiteralString)
 
 
-class HoneyFile(Generic[L, M, P_co], HoneyNode[L, M], ABC):
+class HoneyFile(Generic[L, M, P_co], HoneyNode[L, M, P_co], ABC):
     """Represents a single file node containing point-like items."""
 
-    @property
-    def children(self) -> Iterable[P_co]:
-        """Iterable[P]: Live iterable view of the node's children."""
-        return super().children
-
     # Override load, since there is no children metadata
-    # TODO: can we avoid type ignoring?
-    def _load(  # type: ignore
+    def _load_children(  # type: ignore
         self,
         raw_children_metadata: Optional[Dict[UUID, RawMetadata]] = None,
     ) -> Iterable[P_co]:
-        return self._load_file(self.location)
-
-    @staticmethod
-    @abstractmethod
-    def _load_file(location: Path) -> List[P_co]:
-        raise NotImplementedError
+        return []
 
     def __iter__(self) -> Iterator[P_co]:
-        """Call super().__iter__."""
-        return super().__iter__()
+        return self.iter_points()
 
-    def __getitem__(self, idx):
-        return super().__getitem__(idx)
+    @abstractmethod
+    def iter_points(self) -> Iterator[P_co]:
+        """Iterate over the points in this file."""
+        raise NotImplementedError

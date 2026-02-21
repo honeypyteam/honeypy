@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Iterable, Iterator, List, Literal, Tuple, TypeAlias, TypedDict
+from typing import Any, Iterator, List, Literal, Tuple, TypeAlias, TypedDict
 from uuid import UUID
 
 from honeypy.metagraph.adapters import LoadableMixin
@@ -53,7 +53,7 @@ class Metadata(TypedDict):
 
 
 class ArrayFile(
-    LoadableMixin[ExternalArray],
+    LoadableMixin[ExternalArray, InternalArrayRow],
     HoneyFile[Literal["numbers"], Metadata, InternalArrayRow],
 ):
     """
@@ -65,18 +65,12 @@ class ArrayFile(
 
     CLASS_UUID = UUID("fc5cd48b-e5f9-4bdf-a956-64cec3c0d620")
 
-    def _unload(self) -> None:
-        pass
-
-    def _save(self, location: Path, metadata: Any) -> None:
-        pass
-
     @staticmethod
-    def _load_from(data: ExternalArray) -> Iterable[InternalArrayRow]:
+    def load_from(data: ExternalArray) -> Iterator[InternalArrayRow]:
         return (InternalArrayRow(a, b, c) for _, (a, b, c) in data.iterrows())
 
     @staticmethod
-    def _get_data(children: Iterable[InternalArrayRow]) -> ExternalArray:
+    def _get_data(children: Iterator[InternalArrayRow]) -> ExternalArray:
         return ExternalArray(contents=[(c.first, c.second, c.third) for c in children])
 
     @staticmethod
@@ -95,18 +89,12 @@ class ArrayFile(
     def _locator(parent_location: Path, metadata: Metadata) -> Path:
         return parent_location / metadata["filename"]
 
-    @staticmethod
-    def _load_file(location: Path) -> List[InternalArrayRow]:
-        rows: List[InternalArrayRow] = []
-        with location.open("r", encoding="utf-8") as fh:
+    def iter_points(self) -> Iterator[InternalArrayRow]:
+        with self.location.open("r", encoding="utf-8") as fh:
             for line in fh:
                 line = line.rstrip("\n")
                 parts = line.split(",")
 
-                rows.append(
-                    InternalArrayRow(
-                        first=int(parts[0]), second=int(parts[1]), third=int(parts[2])
-                    )
+                yield InternalArrayRow(
+                    first=int(parts[0]), second=int(parts[1]), third=int(parts[2])
                 )
-
-        return rows
