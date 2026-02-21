@@ -21,8 +21,8 @@ from typing import (
     TypeVar,
 )
 
-from honeypy.metagraph.honey_file import HoneyFile
-from honeypy.metagraph.meta.honey_node import HoneyNode
+from honeypy.data_graph.honey_file import HoneyFile
+from honeypy.data_graph.meta.honey_node import HoneyNode
 
 F = TypeVar("F", bound=HoneyFile, covariant=True)
 M = TypeVar("M", bound=Mapping[str, Any])

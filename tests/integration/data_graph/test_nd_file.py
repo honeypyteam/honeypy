@@ -1,6 +1,6 @@
 from typing import List, Tuple
 
-from honeypy.metagraph.meta.virtual_node import VirtualNode
+from honeypy.data_graph.meta.virtual_node import VirtualNode
 from honeypy.transform.pullback import Pullback
 from tests.fixtures.get_plugin import PluginGetter
 from tests.plugins.plugin_1.src.key_val_file import KeyBoolFile, KeyIntFile, KeyStrFile

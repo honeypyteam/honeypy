@@ -15,7 +15,7 @@ from typing import (
     overload,
 )
 
-from honeypy.metagraph import NDHoneyFile
+from honeypy.data_graph import NDHoneyFile
 
 Ts = TypeVarTuple("Ts")
 M = TypeVar("M", bound=Tuple[Mapping[str, Any], ...])

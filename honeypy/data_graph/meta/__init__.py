@@ -1,7 +1,7 @@
-"""Meta package for the metagraph core.
+"""Meta package for the data graph core.
 
 This package exposes the minimal, framework-level abstractions used by the
-metagraph model (the "meta" layer). It intentionally keeps a very small public
+data graph model (the "meta" layer). It intentionally keeps a very small public
 surface: the lightweight lifecycle/metadata contract used by concrete node
 types such as files, collections and projects.
 

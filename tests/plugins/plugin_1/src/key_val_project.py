@@ -2,8 +2,8 @@ from pathlib import Path
 from typing import Any, Literal, TypeAlias, TypedDict
 from uuid import UUID
 
-from honeypy.metagraph.honey_project import HoneyProject
-from honeypy.metagraph.meta.honey_node import HoneyNode
+from honeypy.data_graph.honey_project import HoneyProject
+from honeypy.data_graph.meta.honey_node import HoneyNode
 from tests.plugins.plugin_1.src.key_val_collection import (
     KeyIntCollection,
     KeyStrCollection,

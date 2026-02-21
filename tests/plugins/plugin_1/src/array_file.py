@@ -3,8 +3,8 @@ from pathlib import Path
 from typing import Any, Iterator, List, Literal, Tuple, TypeAlias, TypedDict
 from uuid import UUID
 
-from honeypy.metagraph.adapters import LoadableMixin
-from honeypy.metagraph.honey_file import HoneyFile
+from honeypy.data_graph.adapters import LoadableMixin
+from honeypy.data_graph.honey_file import HoneyFile
 
 ExternalArrayRow: TypeAlias = Tuple[int, int, int]
 

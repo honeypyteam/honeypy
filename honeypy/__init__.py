@@ -1,11 +1,10 @@
 """HoneyPy — lightweight, extensible tooling for research data management.
 
-Provides core metagraph types, plugin discovery and small transforms used to
+Provides core data graph types, plugin discovery and small transforms used to
 compose research data pipelines.
 """
 
-from .honeypy import HoneyPy
-from .metagraph import (
+from .data_graph import (
     honey_collection,
     honey_file,
     honey_project,
@@ -13,6 +12,7 @@ from .metagraph import (
     nd_file,
     nd_project,
 )
+from .honeypy import HoneyPy
 
 __all__ = [
     "HoneyPy",

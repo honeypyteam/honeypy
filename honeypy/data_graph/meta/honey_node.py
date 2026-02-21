@@ -1,6 +1,6 @@
-"""Core metagraph node abstraction.
+"""Core data graph node abstraction.
 
-This module provides the base abstract node used across the metagraph model.
+This module provides the base abstract node used across the data graph model.
 """
 
 import json
@@ -24,7 +24,7 @@ from typing import (
 )
 from uuid import UUID, uuid4
 
-from honeypy.metagraph.meta.raw_metadata import RawMetadata
+from honeypy.data_graph.meta.raw_metadata import RawMetadata
 
 P_co = TypeVar("P_co", covariant=True)
 L = TypeVar("L", bound=LiteralString | Tuple[LiteralString, ...])
@@ -35,7 +35,7 @@ _CLASS_REGISTRY: Dict[UUID, Type["HoneyNode"]] = {}
 
 
 class HoneyNode(ABC, Generic[L, M, P_co]):
-    """Abstract base node for the metagraph."""
+    """Abstract base node for the data graph."""
 
     # Kept in metadata and used in parent-child dynamic construction
     CLASS_UUID: ClassVar[UUID]
@@ -237,7 +237,7 @@ class HoneyNode(ABC, Generic[L, M, P_co]):
 
             match idx:
                 case int() as x, y:
-                    return self[x][y]
+                    return self[x][y]  # type: ignore
                 case x, y:
                     return (p[y] for p in self[x])
                 case _:

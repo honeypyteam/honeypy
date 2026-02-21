@@ -11,7 +11,7 @@ from typing import (
     Unpack,
 )
 
-from honeypy.metagraph.meta.honey_node import HoneyNode
+from honeypy.data_graph.meta.honey_node import HoneyNode
 
 from .stubs import IndexableNDFile
 

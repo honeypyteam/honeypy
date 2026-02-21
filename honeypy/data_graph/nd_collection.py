@@ -1,4 +1,4 @@
-"""N-dimensional collection support for the metagraph.
+"""N-dimensional collection support for the datagraph.
 
 This module defines :class:`NDHoneyCollection`, a generalized collection type
 that can represent collections whose children are tuples of heterogeneous
@@ -31,7 +31,7 @@ from typing import (
     Unpack,
 )
 
-from honeypy.metagraph.meta.honey_node import HoneyNode
+from honeypy.data_graph.meta.honey_node import HoneyNode
 
 Ts = TypeVarTuple("Ts")
 M = TypeVar("M", bound=Tuple[Mapping[str, Any], ...])

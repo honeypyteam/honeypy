@@ -2,8 +2,8 @@ from abc import ABC
 from pathlib import Path
 from typing import Any, Generic, Iterator, LiteralString, Mapping, TypeVar
 
-from honeypy.metagraph.meta.honey_node import HoneyNode
-from honeypy.metagraph.stubs.indexable_file import IndexableFile
+from honeypy.data_graph.meta.honey_node import HoneyNode
+from honeypy.data_graph.stubs.indexable_file import IndexableFile
 
 P_co = TypeVar("P_co", covariant=True)
 M = TypeVar("M", bound=Mapping[str, Any])

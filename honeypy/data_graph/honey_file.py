@@ -1,4 +1,4 @@
-"""File node types for the metagraph.
+"""File node types for the data graph.
 
 This module defines `HoneyFile`, a thin node wrapper representing a filesystem-backed
 file (or collection of files) that yields point-like objects when iterated.
@@ -13,7 +13,7 @@ Design & typing
 Behaviour
 ---------
 - Loading/unloading, metadata and child management are provided by
-  :class:`honeypy.metagraph.meta.honey_node.HoneyNode`.
+  :class:`honeypy.datagraph.meta.honey_node.HoneyNode`.
 - Use collection/file unions at call sites (Union[HoneyFile[A], HoneyFile[B]])
   when you need heterogeneous collections; prefer factory helpers to avoid casts.
 """
@@ -34,8 +34,8 @@ from typing import (
 )
 from uuid import UUID
 
-from honeypy.metagraph.meta.honey_node import HoneyNode
-from honeypy.metagraph.meta.raw_metadata import RawMetadata
+from honeypy.data_graph.meta.honey_node import HoneyNode
+from honeypy.data_graph.meta.raw_metadata import RawMetadata
 
 P_co = TypeVar("P_co", covariant=True)
 M = TypeVar("M", bound=Mapping[str, Any])

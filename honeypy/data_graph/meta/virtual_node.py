@@ -10,7 +10,7 @@ from pathlib import Path
 from typing import Any, Dict, Iterator, Literal, Optional, TypedDict
 from uuid import UUID
 
-from honeypy.metagraph.meta.honey_node import HoneyNode
+from honeypy.data_graph.meta.honey_node import HoneyNode
 
 
 class Metadata(TypedDict):

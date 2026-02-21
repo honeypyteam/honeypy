@@ -1,4 +1,4 @@
-"""Transformation primitives for the metagraph.
+"""Transformation primitives for the data graph.
 
 Defines the minimal abstract base used by concrete transform implementations.
 """

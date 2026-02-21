@@ -1,4 +1,4 @@
-from honeypy.metagraph.meta.virtual_node import VirtualNode
+from honeypy.data_graph.meta.virtual_node import VirtualNode
 from tests.fixtures.get_plugin import PluginGetter
 from tests.plugins.plugin_1.src.array_file import ArrayFile
 

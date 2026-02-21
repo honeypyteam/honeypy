@@ -1,7 +1,7 @@
-"""Metagraph package: concrete node abstractions.
+"""Data graph package: concrete node abstractions.
 
 This package provides concrete, framework-level abstractions that build on the
-meta layer. It exposes the primary node types used in the metagraph model:
+meta layer. It exposes the primary node types used in the data graph model:
 
 - HoneyFile
   File-like node that yields objects; may represent virtual or

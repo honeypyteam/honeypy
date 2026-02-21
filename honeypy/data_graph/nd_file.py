@@ -6,7 +6,7 @@ whose rows are pairs, triples, etc.). ``TypeVarTuple`` is used to express the
 variable arity of children via ``Ts = TypeVarTuple('Ts')`` and the class is
 parameterized as ``NDHoneyFile[Unpack[Ts]]``.
 
-Runtime behaviour is provided by :class:`honeypy.metagraph.meta.honey_node.HoneyNode`.
+Runtime behaviour is provided by :class:`honeypy.datagraph.meta.honey_node.HoneyNode`.
 This module focuses on typing helpers and a small ND-aware convenience API.
 """
 
@@ -21,7 +21,7 @@ from typing import (
     Unpack,
 )
 
-from honeypy.metagraph.meta.honey_node import HoneyNode
+from honeypy.data_graph.meta.honey_node import HoneyNode
 
 Ts = TypeVarTuple("Ts")
 M = TypeVar("M", bound=Tuple[Mapping[str, Any], ...])
