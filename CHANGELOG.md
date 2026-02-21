@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.12.0](https://github.com/honeypyteam/honeypy/compare/v0.11.0...v0.12.0) (2026-02-21)
+
+
+### Features
+
+* use generators for data ([b503400](https://github.com/honeypyteam/honeypy/commit/b50340014d989d1a42766c5937cffe4ff486dbec))
+
 ## [0.11.0](https://github.com/honeypyteam/honeypy/compare/v0.10.0...v0.11.0) (2026-02-20)
 
 
