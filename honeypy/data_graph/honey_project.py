@@ -15,6 +15,7 @@ from typing import (
 
 from honeypy.data_graph.honey_collection import HoneyCollection
 from honeypy.data_graph.meta.honey_node import HoneyNode
+from honeypy.data_graph.meta.node_type import NodeType
 
 C = TypeVar("C", bound=HoneyCollection, covariant=True)
 M = TypeVar("M", bound=Mapping[str, Any])
@@ -23,3 +24,5 @@ L = TypeVar("L", bound=LiteralString)
 
 class HoneyProject(Generic[L, M, C], HoneyNode[L, M, C]):
     """Represents a single project node containing HoneyCollection items."""
+
+    NODE_TYPE = NodeType.PROJECT

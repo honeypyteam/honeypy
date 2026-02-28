@@ -3,7 +3,6 @@ from typing import Any, Literal, TypeAlias, TypedDict
 from uuid import UUID
 
 from honeypy.data_graph.honey_project import HoneyProject
-from honeypy.data_graph.meta.honey_node import HoneyNode
 from tests.plugins.plugin_1.src.key_val_collection import (
     KeyIntCollection,
     KeyStrCollection,
@@ -21,9 +20,6 @@ class KeyValProject(
 ):
     CLASS_UUID = UUID("a7ef3443-6339-4a95-a0c0-73d477ead1d2")
 
-    def __init__(self, principal_parent: HoneyNode):
-        super().__init__(principal_parent)
-
     @staticmethod
     def _parse_metadata(raw_metadata: Any) -> Metadata:
         return {"project_name": raw_metadata["project name"]}
@@ -34,4 +30,4 @@ class KeyValProject(
 
     @staticmethod
     def _locator(parent_location: Path, metadata: Metadata) -> Path:
-        return parent_location
+        return parent_location / metadata["project_name"]

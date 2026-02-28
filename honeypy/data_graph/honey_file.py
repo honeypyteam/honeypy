@@ -35,6 +35,7 @@ from typing import (
 from uuid import UUID
 
 from honeypy.data_graph.meta.honey_node import HoneyNode
+from honeypy.data_graph.meta.node_type import NodeType
 from honeypy.data_graph.meta.raw_metadata import RawMetadata
 
 P_co = TypeVar("P_co", covariant=True)
@@ -44,6 +45,8 @@ L = TypeVar("L", bound=LiteralString)
 
 class HoneyFile(Generic[L, M, P_co], HoneyNode[L, M, P_co], ABC):
     """Represents a single file node containing point-like items."""
+
+    NODE_TYPE = NodeType.FILE
 
     # Override load, since there is no children metadata
     def _load_children(  # type: ignore

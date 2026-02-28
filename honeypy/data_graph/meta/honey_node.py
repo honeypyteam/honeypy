@@ -3,35 +3,33 @@
 This module provides the base abstract node used across the data graph model.
 """
 
-import json
+from __future__ import annotations
+
 from abc import ABC, abstractmethod
 from itertools import islice
 from pathlib import Path
 from typing import (
+    TYPE_CHECKING,
     Any,
     ClassVar,
-    Dict,
     Generic,
     Iterator,
     LiteralString,
     Mapping,
     Optional,
-    Set,
     Tuple,
-    Type,
     TypeVar,
-    cast,
 )
 from uuid import UUID, uuid4
 
-from honeypy.data_graph.meta.raw_metadata import RawMetadata
+if TYPE_CHECKING:
+    from honeypy.data_graph.meta.node_type import NodeType
+    from honeypy.services.datagraph.data_graph import DataGraph
+    from honeypy.services.datagraph.node_factory import NodeFactory
 
 P_co = TypeVar("P_co", covariant=True)
 L = TypeVar("L", bound=LiteralString | Tuple[LiteralString, ...])
 M = TypeVar("M", bound=Mapping[str, Any] | Tuple[Mapping[str, Any], ...])
-
-# registry for auto-registered node classes keyed by CLASS_UUID
-_CLASS_REGISTRY: Dict[UUID, Type["HoneyNode"]] = {}
 
 
 class HoneyNode(ABC, Generic[L, M, P_co]):
@@ -39,55 +37,29 @@ class HoneyNode(ABC, Generic[L, M, P_co]):
 
     # Kept in metadata and used in parent-child dynamic construction
     CLASS_UUID: ClassVar[UUID]
+    NODE_TYPE: ClassVar[NodeType]
     ARITY: int = 1
-
     _uuid: UUID
 
-    _parents: Set["HoneyNode"]
-    _principal_parent: "HoneyNode"
-    _metadata: M
+    _data_graph: DataGraph
+    _node_factory: NodeFactory
+    _principal_parent: UUID | None
 
     def __init__(
         self,
-        principal_parent: "HoneyNode",
-        *,
-        metadata: Optional[M] = None,
         uuid: Optional[UUID] = None,
+        *,
+        node_factory: NodeFactory,
+        metadata: M,
+        principal_parent: Optional[UUID] = None,
     ) -> None:
         """Create a new HoneyNode."""
         self._uuid = uuid or uuid4()
-
-        self._parents = set()
-
+        self._metadata = metadata
         self._principal_parent = principal_parent
-        self._parents.add(principal_parent)
-        # TODO: you want to update parent here but this cannot be done elegantly
-        # yet, as it forces you to combine streams
-        # it's better to create a registry for the data DAG first before we can do it
-        # this also allows us to move all parent-child relationship logic from the node
-        # to the registry, keeping the node class light
 
-        if metadata is None:
-            raw_metadata = HoneyNode._raw_metadata(
-                self._principal_parent.location, self._uuid
-            )
-            if raw_metadata is not None:
-                self._metadata = self._parse_metadata(raw_metadata["data"])
-            else:
-                self._metadata = cast(M, {})
-        else:
-            self._metadata = metadata
-
-    def _save_metadata(self) -> None:
-        raw_metadata: RawMetadata = {
-            "class_uuid": str(self.CLASS_UUID),
-            "data": self._serialise_metadata(self.metadata),
-        }
-
-        parent_loc = self._principal_parent.location
-        metadata_file = HoneyNode._get_metadata_file(parent_loc, self._uuid)
-        metadata_file.parent.mkdir(parents=True, exist_ok=True)
-        metadata_file.write_text(json.dumps(raw_metadata), encoding="utf-8")
+        self._node_factory = node_factory
+        self._data_graph = node_factory.data_graph
 
     @property
     def arity(self) -> int:
@@ -105,6 +77,18 @@ class HoneyNode(ABC, Generic[L, M, P_co]):
         return self._metadata
 
     @property
+    def principal_parent(self) -> "HoneyNode":
+        """Get the principal parent of this node."""
+        if self._uuid in self._data_graph:
+            node = self._data_graph[self._uuid]
+            return self._node_factory.create_node(node.principal_parent)
+
+        if self._principal_parent is not None:
+            return self._node_factory.create_node(self._principal_parent)
+
+        raise KeyError(f"no principal parent exists for node {self.uuid!s}")
+
+    @property
     def location(self) -> Path:
         """
         Path: A path chosen to represent the data's location.
@@ -112,92 +96,41 @@ class HoneyNode(ABC, Generic[L, M, P_co]):
         The location is calculated through the `self._locator` and uses the
         node's metadata and parent's location (if it exists)
         """
-        if self._principal_parent is None:
-            raise ValueError("Cannot find location without a parent node")
+        return self._locator(self.principal_parent.location, self._metadata)
 
-        return self._locator(self._principal_parent.location, self._metadata)
-
-    def _load_children(
-        self, raw_children_metadata: Optional[Dict[UUID, RawMetadata]] = None
-    ) -> Iterator[P_co]:
-        try:
-            raw_children_metadata = raw_children_metadata or {}
-            for uuid, raw_metadata in raw_children_metadata.items():
-                cls = _CLASS_REGISTRY[UUID(raw_metadata["class_uuid"])]
-
-                yield cls(  # type: ignore
-                    self,
-                    metadata=raw_metadata["data"],
-                    uuid=uuid,
-                )
-        except Exception as e:
-            raise Exception(f"Problem loading children metadata for {self!r}") from e
-
-    @staticmethod
-    def _raw_metadata(parent_location: Path, uuid: UUID) -> RawMetadata | None:
-        metadata_file = HoneyNode._get_metadata_file(parent_location, uuid)
-
-        raw_metadata: RawMetadata | None = None
-        if metadata_file.exists():
-            with open(metadata_file, "r") as fh:
-                raw_metadata = json.load(fh)
-
-        return raw_metadata
-
-    @staticmethod
-    def _get_metadata_file(parent_location: Path, uuid: UUID) -> Path:
-        return parent_location / ".honeypy" / "children_metadata" / f"{uuid!s}.json"
-
-    @staticmethod
-    def _get_raw_children_metadata(location: Path) -> Dict[UUID, RawMetadata]:
-        children_metadata_dir = location / ".honeypy" / "children_metadata"
-
-        if not children_metadata_dir.exists():
-            return {}
-
-        result = {}
-        for f in children_metadata_dir.iterdir():
-            uuid = UUID(f.stem)
-
-            with open(f, "r", encoding="utf-8") as fh:
-                all_metadata: RawMetadata = json.load(fh)
-                result[uuid] = all_metadata
-
-        return result
+    @property
+    def uuid(self) -> UUID:
+        """Get the uuid for this node."""
+        return self._uuid
 
     @staticmethod
     @abstractmethod
     def _parse_metadata(raw_metadata: Any) -> M:
-        """Read raw metadata for the node.
-
-        Returns
-        -------
-        Metadata
-            Metadata mapping attached to the node.
-        """
+        """Parse raw metadata for the node."""
         raise NotImplementedError
 
     @staticmethod
     @abstractmethod
     def _serialise_metadata(metadata: M) -> Any:
-        """Serialise metadata for saving to a metadata file."""
+        """Serialise parsed metadata to raw metadata for saving."""
         raise NotImplementedError
 
     @staticmethod
     @abstractmethod
     def _locator(parent_location: Path, metadata: M) -> Path:
-        """Return the location of this node on the filesystem."""
+        """Return the location reference of this node on the filesystem."""
         raise NotImplementedError
 
     def __iter__(self) -> Iterator[P_co]:
-        """Iterate over the node's children.
+        """Iterate over the node's children."""
+        node = self._data_graph[self._uuid]
 
-        Yields
-        ------
-        T
-            Child objects contained by the node.
-        """
-        return self._load_children(HoneyNode._get_raw_children_metadata(self.location))
+        if node is None:
+            raise KeyError(f"node {node!s} not in data graph")
+
+        return (
+            self._node_factory.create_node(n) for n in node.children  # type: ignore
+        )
 
     def __getitem__(self, idx):
         if idx is ...:
@@ -250,21 +183,3 @@ class HoneyNode(ABC, Generic[L, M, P_co]):
     def __hash__(self) -> int:
         """Hash based on node id."""
         return hash(self._uuid)
-
-    def __init_subclass__(cls, **kwargs) -> None:
-        """Auto-register concrete subclasses that define CLASS_UUID.
-
-        Subclasses that set CLASS_UUID: UUID will be registered into the
-        module registry at class-creation time. Abstract subclasses are
-        skipped so only concrete implementations are registered.
-        """
-        super().__init_subclass__(**kwargs)
-        class_uuid = getattr(cls, "CLASS_UUID", None)
-        if getattr(cls, "__abstractmethods__", False):
-            return
-        if class_uuid is None:
-            return  # TODO: require class UUID. Maybe add decorator for not requiring it
-        if not isinstance(class_uuid, UUID):
-            raise TypeError(f"{cls.__name__}.CLASS_UUID must be uuid.UUID")
-
-        _CLASS_REGISTRY[class_uuid] = cls

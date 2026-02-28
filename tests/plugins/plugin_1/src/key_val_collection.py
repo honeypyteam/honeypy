@@ -5,7 +5,6 @@ from typing import (
     Generic,
     Literal,
     LiteralString,
-    Optional,
     Type,
     TypedDict,
     TypeVar,
@@ -14,8 +13,7 @@ from uuid import UUID
 
 from honeypy.data_graph.honey_collection import HoneyCollection
 from honeypy.data_graph.honey_file import HoneyFile
-from honeypy.data_graph.meta.honey_node import HoneyNode
-from tests.plugins.plugin_1.src.key_val_file import KeyIntFile, KeyStrFile
+from tests.plugins.plugin_1.src.key_val_file import KeyBoolFile, KeyIntFile, KeyStrFile
 
 
 class Metadata(TypedDict):
@@ -32,15 +30,6 @@ L = TypeVar("L", bound=LiteralString)
 
 
 class KeyValCollection(HoneyCollection[L, Metadata, T], Generic[L, T]):
-    def __init__(
-        self,
-        principal_parent: HoneyNode,
-        *,
-        metadata: Optional[Metadata] = None,
-        uuid: Optional[UUID] = None,
-    ):
-        super().__init__(principal_parent, metadata=metadata, uuid=uuid)
-
     @staticmethod
     def _parse_metadata(raw_metadata: Any) -> Metadata:
         return {
@@ -96,4 +85,22 @@ class KeyStrCollection(KeyValCollection[Literal["strings"], KeyStrFile]):
             "created_at": metadata["created_at"].isoformat(),
             "created_by": metadata["created_by"],
             "collection_type": "str collection",
+        }
+
+
+class KeyBoolCollection(KeyValCollection[Literal["bools"], KeyBoolFile]):
+    CLASS_UUID = UUID("e701b276-155a-443b-939b-0f130940c13c")
+
+    def _get_class(self) -> Type[KeyBoolFile]:
+        return KeyBoolFile
+
+    @staticmethod
+    def _serialise_metadata(metadata: Metadata) -> Any:
+        return {
+            "folder_name": metadata["folder_name"],
+            "title": metadata["title"],
+            "description": metadata["description"],
+            "created_at": metadata["created_at"].isoformat(),
+            "created_by": metadata["created_by"],
+            "collection_type": "bool collection",
         }

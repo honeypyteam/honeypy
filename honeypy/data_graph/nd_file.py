@@ -22,6 +22,7 @@ from typing import (
 )
 
 from honeypy.data_graph.meta.honey_node import HoneyNode
+from honeypy.data_graph.meta.node_type import NodeType
 
 Ts = TypeVarTuple("Ts")
 M = TypeVar("M", bound=Tuple[Mapping[str, Any], ...])
@@ -34,3 +35,5 @@ D = TypeVar("D")
 
 class NDHoneyFile(Generic[L, M, Unpack[Ts]], HoneyNode[L, M, Tuple[Unpack[Ts]]]):
     """Represents a single file node containing point-like items."""
+
+    NODE_TYPE = NodeType.FILE

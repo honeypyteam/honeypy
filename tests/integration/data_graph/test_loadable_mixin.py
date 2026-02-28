@@ -1,15 +1,17 @@
-from honeypy.data_graph.meta.virtual_node import VirtualNode
+from uuid import UUID
+
+from tests.fixtures.get_context import ContextGetter
 from tests.fixtures.get_plugin import PluginGetter
 from tests.plugins.plugin_1.src.array_file import ArrayFile
 
 
-def test_honey_file_as_adapter(plugin: PluginGetter):
-    location = plugin("plugin_1", copy=True) / "project" / "collection_3"
-
-    collection = VirtualNode(location=location)
+def test_honey_file_as_adapter(plugin: PluginGetter, context: ContextGetter):
+    plugin_path = plugin("plugin_1", copy=True)
+    ctx = context(root_meta_folder=plugin_path / ".honeypy")
 
     file = ArrayFile(
-        collection,
+        node_factory=ctx.node_factory,
+        principal_parent=UUID("8e4d7b9e-f3b4-4f69-9ae4-83061637ace0"),
         metadata={
             "filename": "3_1.csv",
         },

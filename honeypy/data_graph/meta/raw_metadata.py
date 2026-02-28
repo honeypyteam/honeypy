@@ -22,4 +22,5 @@ class RawMetadata(TypedDict):
     """
 
     class_uuid: str
+    node_type: str
     data: Metadata

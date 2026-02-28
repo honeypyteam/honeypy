@@ -1,7 +1,8 @@
 from typing import List, Tuple
+from uuid import UUID
 
-from honeypy.data_graph.meta.virtual_node import VirtualNode
 from honeypy.transform.pullback import Pullback
+from tests.fixtures.get_context import ContextGetter
 from tests.fixtures.get_plugin import PluginGetter
 from tests.plugins.plugin_1.src.key_val_file import KeyBoolFile, KeyIntFile, KeyStrFile
 
@@ -32,13 +33,22 @@ def int_str_str_bool_map(
     return point[0][0]
 
 
-def test_nd_file_pullback_projections(plugin: PluginGetter) -> None:
-    location = plugin("plugin_1", copy=True) / "project" / "collection_1"
+def test_nd_file_pullback_projections(
+    plugin: PluginGetter, context: ContextGetter
+) -> None:
+    plugin_path = plugin("plugin_1", copy=True)
+    ctx = context(root_meta_folder=plugin_path / ".honeypy")
 
-    collection = VirtualNode(location)
-
-    file_1 = KeyIntFile(collection, metadata={"filename": "1_1.csv"})
-    file_2 = KeyStrFile(collection, metadata={"filename": "1_3.csv"})
+    file_1 = KeyIntFile(
+        uuid=UUID("cbae2d2e-4cfb-4bbf-8df7-f9ab971640c4"),
+        node_factory=ctx.node_factory,
+        metadata={"filename": "1_1.csv"},
+    )
+    file_2 = KeyStrFile(
+        uuid=UUID("96da523b-7408-49ba-9c6f-2f4c65d924e8"),
+        node_factory=ctx.node_factory,
+        metadata={"filename": "2_1.csv"},
+    )
 
     def int_map(point: Tuple[str, int]) -> str:
         return point[0]
@@ -46,7 +56,7 @@ def test_nd_file_pullback_projections(plugin: PluginGetter) -> None:
     def str_map(point: Tuple[str, str]) -> str:
         return point[0]
 
-    pullback = Pullback()
+    pullback = Pullback(ctx)
 
     file_3 = pullback(file_1, file_2, int_map, str_map)
 
@@ -54,8 +64,8 @@ def test_nd_file_pullback_projections(plugin: PluginGetter) -> None:
         (*integer_point, *string_point) for (integer_point, string_point) in file_3
     } == {
         ("a", 1, "a", "one"),
-        ("b", 3, "b", "three"),
-        ("c", 9, "c", "nine"),
+        ("b", 3, "b", "two"),
+        ("c", 9, "c", "three"),
         ("d", 4, "d", "four"),
     }
 
@@ -63,33 +73,46 @@ def test_nd_file_pullback_projections(plugin: PluginGetter) -> None:
 
     assert metadata == (
         {"filename": "1_1.csv"},
-        {"filename": "1_3.csv"},
+        {"filename": "2_1.csv"},
     )
 
 
-def test_large_pullback(plugin: PluginGetter) -> None:
-    path = plugin("plugin_1", copy=True) / "project"
+def test_large_pullback(plugin: PluginGetter, context: ContextGetter) -> None:
+    plugin_path = plugin("plugin_1", copy=True)
+    ctx = context(root_meta_folder=plugin_path / ".honeypy")
 
-    collection_1 = VirtualNode(path / "collection_1")
-    collection_2 = VirtualNode(path / "collection_2")
-    collection_4 = VirtualNode(path / "collection_4")
+    file_1 = KeyIntFile(
+        node_factory=ctx.node_factory,
+        metadata={"filename": "1_1.csv"},
+        principal_parent=UUID("1c829434-9f9e-4f2d-ba7d-e20f4400b7bb"),
+    )
+    file_2 = KeyStrFile(
+        node_factory=ctx.node_factory,
+        metadata={"filename": "2_1.csv"},
+        principal_parent=UUID("17c5a2df-8ab9-40f3-92d0-a3e6aabb2b98"),
+    )
+    file_3 = KeyStrFile(
+        node_factory=ctx.node_factory,
+        metadata={"filename": "2_2.csv"},
+        principal_parent=UUID("17c5a2df-8ab9-40f3-92d0-a3e6aabb2b98"),
+    )
+    file_4 = KeyBoolFile(
+        node_factory=ctx.node_factory,
+        metadata={"filename": "4_1.csv"},
+        principal_parent=UUID("9908789b-b4bf-42a8-adff-e74d1b455af7"),
+    )
 
-    file_1 = KeyIntFile(collection_1, metadata={"filename": "1_1.csv"})
-    file_2 = KeyStrFile(collection_2, metadata={"filename": "1_1.csv"})
-    file_3 = KeyStrFile(collection_2, metadata={"filename": "1_2.csv"})
-    file_4 = KeyBoolFile(collection_4, metadata={"filename": "4_1.csv"})
-
-    pullback = Pullback()
+    pullback = Pullback(ctx)
 
     file_5 = pullback(file_1, file_2, int_map, str_map)
     file_6 = pullback(file_3, file_4, str_map, bool_map)
     file_7 = pullback(file_5, file_6, int_str_map, str_bool_map)
 
     assert [p for p in file_7] == [
-        (("a", 1), ("a", "11"), ("a", "10"), ("a", True)),
-        (("b", 3), ("b", "53"), ("b", "51"), ("b", True)),
-        (("c", 9), ("c", "28"), ("c", "20"), ("c", False)),
-        (("d", 4), ("d", "54"), ("d", "24"), ("d", False)),
+        (("a", 1), ("a", "one"), ("a", "two"), ("a", True)),
+        (("b", 3), ("b", "two"), ("b", "four"), ("b", True)),
+        (("c", 9), ("c", "three"), ("c", "nine"), ("c", False)),
+        (("d", 4), ("d", "four"), ("d", "eight"), ("d", False)),
     ]
 
     file_8 = pullback(file_1, file_7, int_map, int_str_str_bool_map)
@@ -97,18 +120,27 @@ def test_large_pullback(plugin: PluginGetter) -> None:
     assert file_8[0, 0] == ("a", 1)
 
 
-def test_nd_file_pullback_predicate(plugin: PluginGetter) -> None:
-    location = plugin("plugin_1", copy=True) / "project" / "collection_1"
+def test_nd_file_pullback_predicate(
+    plugin: PluginGetter, context: ContextGetter
+) -> None:
+    plugin_path = plugin("plugin_1", copy=True)
+    ctx = context(root_meta_folder=plugin_path / ".honeypy")
 
-    collection = VirtualNode(location)
-
-    file_1 = KeyIntFile(collection, metadata={"filename": "1_1.csv"})
-    file_2 = KeyStrFile(collection, metadata={"filename": "1_3.csv"})
+    file_1 = KeyIntFile(
+        UUID("cbae2d2e-4cfb-4bbf-8df7-f9ab971640c4"),
+        node_factory=ctx.node_factory,
+        metadata={"filename": "1_1.csv"},
+    )
+    file_2 = KeyStrFile(
+        UUID("96da523b-7408-49ba-9c6f-2f4c65d924e8"),
+        node_factory=ctx.node_factory,
+        metadata={"filename": "2_1.csv"},
+    )
 
     def predicate(int_point: Tuple[str, int], str_point: Tuple[str, str]) -> bool:
         return int_point[0] == str_point[0]
 
-    pullback = Pullback()
+    pullback = Pullback(ctx)
 
     file_3 = pullback(file_1, file_2, predicate)
 
@@ -116,34 +148,41 @@ def test_nd_file_pullback_predicate(plugin: PluginGetter) -> None:
         (*integer_point, *string_point) for (integer_point, string_point) in file_3
     } == {
         ("a", 1, "a", "one"),
-        ("b", 3, "b", "three"),
-        ("c", 9, "c", "nine"),
+        ("b", 3, "b", "two"),
+        ("c", 9, "c", "three"),
         ("d", 4, "d", "four"),
     }
 
 
-def test_nd_file_slicing(plugin: PluginGetter) -> None:
+def test_nd_file_slicing(plugin: PluginGetter, context: ContextGetter) -> None:
     plugin_path = plugin("plugin_1", copy=True)
+    ctx = context(plugin_path / ".honeypy")
 
-    location_1 = plugin_path / "project" / "collection_1"
-    location_2 = plugin_path / "project" / "collection_4"
+    file_1 = KeyIntFile(
+        node_factory=ctx.node_factory,
+        metadata={"filename": "1_1.csv"},
+        principal_parent=UUID("1c829434-9f9e-4f2d-ba7d-e20f4400b7bb"),
+    )
+    file_2 = KeyStrFile(
+        node_factory=ctx.node_factory,
+        metadata={"filename": "2_1.csv"},
+        principal_parent=UUID("17c5a2df-8ab9-40f3-92d0-a3e6aabb2b98"),
+    )
+    file_3 = KeyBoolFile(
+        node_factory=ctx.node_factory,
+        metadata={"filename": "4_1.csv"},
+        principal_parent=UUID("9908789b-b4bf-42a8-adff-e74d1b455af7"),
+    )
 
-    collection_1 = VirtualNode(location_1)
-    collection_2 = VirtualNode(location_2)
-
-    file_1 = KeyIntFile(collection_1, metadata={"filename": "1_1.csv"})
-    file_2 = KeyStrFile(collection_1, metadata={"filename": "1_3.csv"})
-    file_3 = KeyBoolFile(collection_2, metadata={"filename": "4_1.csv"})
-
-    pullback = Pullback()
+    pullback = Pullback(ctx)
 
     file_4 = pullback(file_1, file_2, int_map, str_map)
     file_5 = pullback(file_4, file_3, int_str_map, bool_map)
 
     all_points: List[Tuple[Tuple[str, int], Tuple[str, str], Tuple[str, bool]]] = [
         (("a", 1), ("a", "one"), ("a", True)),
-        (("b", 3), ("b", "three"), ("b", True)),
-        (("c", 9), ("c", "nine"), ("c", False)),
+        (("b", 3), ("b", "two"), ("b", True)),
+        (("c", 9), ("c", "three"), ("c", False)),
         (("d", 4), ("d", "four"), ("d", False)),
     ]
 
@@ -151,7 +190,7 @@ def test_nd_file_slicing(plugin: PluginGetter) -> None:
 
     # TODO: such projections really are transformations on the files. They should
     # be coded such that the file sees a projection in its provenance
-    assert file_5[2] == (("c", 9), ("c", "nine"), ("c", False))
+    assert file_5[2] == (("c", 9), ("c", "three"), ("c", False))
     assert file_5[2, 0] == ("c", 9)
 
     assert list(file_5[:3, 0]) == [("a", 1), ("b", 3), ("c", 9)]

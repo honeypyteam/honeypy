@@ -23,6 +23,7 @@ from typing import (
 
 from honeypy.data_graph.honey_file import HoneyFile
 from honeypy.data_graph.meta.honey_node import HoneyNode
+from honeypy.data_graph.meta.node_type import NodeType
 
 F = TypeVar("F", bound=HoneyFile, covariant=True)
 M = TypeVar("M", bound=Mapping[str, Any])
@@ -31,3 +32,5 @@ L = TypeVar("L", bound=LiteralString)
 
 class HoneyCollection(Generic[L, M, F], HoneyNode[L, M, F]):
     """A collection of HoneyFile nodes."""
+
+    NODE_TYPE = NodeType.COLLECTION
