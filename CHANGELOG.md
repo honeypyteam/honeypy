@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.13.0](https://github.com/honeypyteam/honeypy/compare/v0.12.0...v0.13.0) (2026-02-28)
+
+
+### Features
+
+* data graph ([cf902bd](https://github.com/honeypyteam/honeypy/commit/cf902bd659cd33b2c26be9eab2f194dbdeaeb3a0))
+
 ## [0.12.0](https://github.com/honeypyteam/honeypy/compare/v0.11.0...v0.12.0) (2026-02-21)
 
 
