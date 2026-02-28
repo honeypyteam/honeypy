@@ -1,0 +1,12 @@
+{
+    "class_uuid": "e701b276-155a-443b-939b-0f130940c13c",
+    "node_type": "collection",
+    "data": {
+        "folder_name": "collection_4",
+        "title": "collection 4",
+        "description": "collection of bool values",
+        "created_at": "2026-02-14T12:00:00Z",
+        "created_by": "Lawrence",
+        "collection_type": "bool collection"
+    }
+}

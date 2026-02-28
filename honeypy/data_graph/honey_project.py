@@ -1,0 +1,28 @@
+"""Project node types for the data graph.
+
+This module defines HoneyProject, a thin node wrapper representing a complete research
+project, for instance encompassing the folders, files and associated transformations
+for a single research paper.
+"""
+
+from typing import (
+    Any,
+    Generic,
+    LiteralString,
+    Mapping,
+    TypeVar,
+)
+
+from honeypy.data_graph.honey_collection import HoneyCollection
+from honeypy.data_graph.meta.honey_node import HoneyNode
+from honeypy.data_graph.meta.node_type import NodeType
+
+C = TypeVar("C", bound=HoneyCollection, covariant=True)
+M = TypeVar("M", bound=Mapping[str, Any])
+L = TypeVar("L", bound=LiteralString)
+
+
+class HoneyProject(Generic[L, M, C], HoneyNode[L, M, C]):
+    """Represents a single project node containing HoneyCollection items."""
+
+    NODE_TYPE = NodeType.PROJECT

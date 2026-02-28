@@ -34,9 +34,12 @@ from typing import (
     TypeVar,
     TypeVarTuple,
 )
+from uuid import UUID
 
-from honeypy.metagraph.honey_file import HoneyFile
-from honeypy.metagraph.meta.honey_node import HoneyNode
+from honeypy.data_graph.honey_file import HoneyFile
+from honeypy.data_graph.meta.honey_node import HoneyNode
+from honeypy.services.context import HoneyContext
+from honeypy.services.datagraph.node_factory import NodeFactory
 from honeypy.transform.meta.honey_transform import HoneyTransform
 
 K = TypeVar("K")
@@ -58,14 +61,19 @@ class _JoinNode(HoneyNode[Any, Any, Any]):
 
     def __init__(
         self,
-        principal_parent: HoneyNode,
+        node_factory: NodeFactory,
+        principal_parent: UUID,
         arity: int,
         iter_func: Callable[[], Iterator[Any]],
         metadata=None,
     ):
         self._iter_func = iter_func
         self.ARITY = arity
-        super().__init__(principal_parent, metadata=metadata or {})
+        super().__init__(
+            node_factory=node_factory,
+            metadata=metadata or {},
+            principal_parent=principal_parent,
+        )
 
     # TODO: Think about how to combine metadata
     # Likely add as generic on HoneyNode. Makes it easier to union for instance
@@ -116,6 +124,10 @@ class Pullback(HoneyTransform):
     # Why did I bind the tuple-based metadata to `Mapping[str, Any]` instead of just
     # using `Tuple`? Because I noticed typecheckers don't resolve the type variable
     # for metadata otherwise, even if they reolve the correct generics on the node
+    context: HoneyContext
+
+    def __init__(self, context: HoneyContext):
+        self.context = context
 
     def __call__(
         self,
@@ -182,9 +194,10 @@ class Pullback(HoneyTransform):
                             yield (*self_child, *other_child)
 
         return _JoinNode(
-            node_1._principal_parent,
-            node_1.arity + node_2.arity,
-            iter_func,
+            node_factory=self.context.node_factory,
+            principal_parent=node_1.principal_parent.uuid,
+            arity=node_1.arity + node_2.arity,
+            iter_func=iter_func,
             metadata=(node_1.metadata, node_2.metadata),
         )
 
@@ -220,8 +233,9 @@ class Pullback(HoneyTransform):
                         yield (*child, *match)
 
         return _JoinNode(
-            node_1._principal_parent,
-            node_1.arity + node_2.arity,
-            iter_func,
+            node_factory=self.context.node_factory,
+            principal_parent=node_1.principal_parent.uuid,
+            arity=node_1.arity + node_2.arity,
+            iter_func=iter_func,
             metadata=(node_1.metadata, node_2.metadata),
         )

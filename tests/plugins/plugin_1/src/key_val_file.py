@@ -13,7 +13,7 @@ from typing import (
 )
 from uuid import UUID
 
-from honeypy.metagraph.honey_file import HoneyFile
+from honeypy.data_graph.honey_file import HoneyFile
 
 T = TypeVar("T")
 M = TypeVar("M", bound=Mapping[str, Any])

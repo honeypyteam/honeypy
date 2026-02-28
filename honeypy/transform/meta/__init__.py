@@ -1,5 +1,5 @@
 """
-Meta-transform primitives for the metagraph.
+Meta-transform primitives for the data graph.
 
 This package exposes the base classes for general HoneyPy transformations.
 """

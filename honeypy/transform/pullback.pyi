@@ -10,10 +10,11 @@ from typing import (
     overload,
 )
 
-from honeypy.metagraph.honey_collection import HoneyCollection
-from honeypy.metagraph.honey_file import HoneyFile
-from honeypy.metagraph.nd_collection import NDHoneyCollection
-from honeypy.metagraph.nd_file import NDHoneyFile
+from honeypy.data_graph.honey_collection import HoneyCollection
+from honeypy.data_graph.honey_file import HoneyFile
+from honeypy.data_graph.nd_collection import NDHoneyCollection
+from honeypy.data_graph.nd_file import NDHoneyFile
+from honeypy.services.context import HoneyContext
 from honeypy.transform.meta.honey_transform import HoneyTransform
 
 K = TypeVar("K")
@@ -58,6 +59,7 @@ class Pullback(HoneyTransform):
 
     # Files
 
+    def __init__(self, context: HoneyContext) -> None: ...
     @overload
     def __call__(  # type: ignore
         self,
