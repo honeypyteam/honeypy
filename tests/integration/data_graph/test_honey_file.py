@@ -10,7 +10,7 @@ def test_honey_file_gets_data(plugin: PluginGetter, context: ContextGetter):
     ctx = context(root_meta_folder=plugin_path / ".honeypy")
 
     file = KeyIntFile(
-        node_factory=ctx.node_factory,
+        context=ctx,
         metadata={"filename": "1_1.csv"},
         principal_parent=UUID("1c829434-9f9e-4f2d-ba7d-e20f4400b7bb"),
     )
@@ -23,7 +23,7 @@ def test_honey_file_slicing(plugin: PluginGetter, context: ContextGetter):
     ctx = context(root_meta_folder=plugin_path / ".honeypy")
 
     file = KeyIntFile(
-        node_factory=ctx.node_factory,
+        context=ctx,
         metadata={"filename": "1_1.csv"},
         principal_parent=UUID("1c829434-9f9e-4f2d-ba7d-e20f4400b7bb"),
     )

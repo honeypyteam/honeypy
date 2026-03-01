@@ -2,9 +2,9 @@
 
 This module defines the runtime shape used to persist child-node metadata
 under a parent's metadata store. RawMetadata represents the literal JSON/YAML
-structure written to disk: a stable `class_uuid` string that identifies the
-concrete node class, and a `data` mapping containing the node's own metadata.
-The `Metadata` alias is a recursive mapping used for the deserialized `data`
+structure written to disk: a stable ``class_uuid`` string that identifies the
+concrete node class, and a ``data`` mapping containing the node's own metadata.
+The ``Metadata`` alias is a recursive mapping used for the deserialized ``data``
 field.
 """
 

@@ -12,11 +12,12 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, Dict, Iterator, Literal, Optional, TypedDict
 from uuid import UUID
 
+from honeypy.data_graph.meta.constants import ROOT_UUID
 from honeypy.data_graph.meta.honey_node import HoneyNode
 from honeypy.data_graph.meta.node_type import NodeType
 
 if TYPE_CHECKING:
-    from honeypy.services.datagraph.node_factory import NodeFactory
+    from honeypy.services.context import HoneyContext
 
 
 class Metadata(TypedDict):
@@ -34,12 +35,12 @@ class VirtualNode(HoneyNode[Literal[""], Metadata, None]):
     def __init__(
         self,
         location: Path,
-        node_factory: NodeFactory,
+        context: HoneyContext,
     ) -> None:
         super().__init__(
-            node_factory=node_factory,
+            context=context,
             metadata={"location": location},
-            uuid=UUID("00000000-0000-0000-0000-000000000000"),
+            uuid=ROOT_UUID,
         )
 
     @property

@@ -1,21 +1,8 @@
 """File node types for the data graph.
 
-This module defines `HoneyFile`, a thin node wrapper representing a filesystem-backed
-file (or collection of files) that yields point-like objects when iterated.
-
-Design & typing
---------------
-- HoneyFile[P] is parameterised by the "point" payload type P
-- For N-ary/variadic joins we use TypeVarTuple (PEP 646) in overloads; overloads provide
-  precise static shapes while the runtime implementation returns a lightweight
-  in-memory node (or a concrete HoneyFile when a caller supplies a factory).
-
-Behaviour
----------
-- Loading/unloading, metadata and child management are provided by
-  :class:`honeypy.datagraph.meta.honey_node.HoneyNode`.
-- Use collection/file unions at call sites (Union[HoneyFile[A], HoneyFile[B]])
-  when you need heterogeneous collections; prefer factory helpers to avoid casts.
+This module defines :class:`HoneyFile`, a thin node wrapper representing a
+storage-backed file (or collection of files) that yields point-like objects when
+iterated.
 """
 
 from __future__ import annotations

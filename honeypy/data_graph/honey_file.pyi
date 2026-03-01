@@ -1,4 +1,4 @@
-from abc import ABC
+from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import Any, Generic, Iterator, LiteralString, Mapping, TypeVar
 
@@ -16,4 +16,9 @@ class HoneyFile(Generic[L, M, P_co], IndexableFile[P_co], HoneyNode[L, M, P_co],
     def _serialise_metadata(metadata: M) -> Any: ...
     @staticmethod
     def _parse_metadata(raw_metadata: Any) -> M: ...
+    @abstractmethod
+    def iter_points(self) -> Iterator[P_co]:
+        """Iterate over the points in this file."""
+        raise NotImplementedError
+
     def __iter__(self) -> Iterator[P_co]: ...

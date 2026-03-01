@@ -60,7 +60,7 @@ class ArrayFile(
     A file that works with arrays directly.
 
     This is a dummy example that demonstrates working with "external" libraries
-    using files more like an adapter using the `LoadableMixin`
+    using files more like an adapter using the ``LoadableMixin`` class
     """
 
     CLASS_UUID = UUID("fc5cd48b-e5f9-4bdf-a956-64cec3c0d620")

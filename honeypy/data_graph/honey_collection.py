@@ -1,16 +1,16 @@
 """Collection node for honey files.
 
-This module provides HoneyCollection, a container node that represents a
+This module provides :class:`HoneyCollection`, a container node that represents a
 collection of HoneyFile[T] instances stored under a filesystem location. The
 collection is parameterized by the "point" type T exposed by its files.
 
 The collection class is designed to be flexible, and its existence is a semantic
-courtesy (it suffices, in fact, that it is a subtype of `HoneyCollection`)
+courtesy (it suffices, in fact, that it is a subtype of ``HoneyCollection``)
 Practically a collection can be represented as a single folder, or a collection of
-folders with files findable by helpers in the class as well as the `location` property
+folders with files findable by helpers in the class as well as the ``location`` property
 
 The collection is responsible for locating/instantiating HoneyFile children and
-can be loaded lazily (via the `load` mechanism on HoneyNode).
+can be loaded lazily (via the ``load`` mechanism on HoneyNode).
 """
 
 from typing import (
