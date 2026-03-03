@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.14.0](https://github.com/honeypyteam/honeypy/compare/v0.13.0...v0.14.0) (2026-03-03)
+
+
+### Features
+
+* create intermediate representation ([143ce13](https://github.com/honeypyteam/honeypy/commit/143ce1325250e725bb6cbb6f70756c497ed60980))
+
 ## [0.13.0](https://github.com/honeypyteam/honeypy/compare/v0.12.0...v0.13.0) (2026-02-28)
 
 
