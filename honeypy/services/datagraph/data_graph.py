@@ -14,10 +14,12 @@ import json
 import traceback
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import TYPE_CHECKING, Dict, Iterator, List, Mapping, Set
+from typing import TYPE_CHECKING, Dict, Iterable, Iterator, List, Mapping, Set
 from uuid import UUID
 
+from honeypy.data_graph.meta.constants import ROOT_UUID
 from honeypy.data_graph.meta.node_type import NodeType
+from honeypy.services.datagraph.utils import nested_intersection
 
 if TYPE_CHECKING:
     from honeypy.data_graph.meta.honey_node import HoneyNode
@@ -29,11 +31,15 @@ class DataGraphNode:
     """A single node in the data graph DAG."""
 
     uuid: UUID
-    node_type: NodeType
     raw_metadata: RawMetadata
     principal_parent: UUID
     parents: Set[UUID] = field(default_factory=set)
     children: Set[UUID] = field(default_factory=set)
+
+    @property
+    def node_type(self) -> NodeType:
+        """Return the node type of this node."""
+        return NodeType(self.raw_metadata["node_type"])
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, DataGraphNode):
@@ -52,7 +58,6 @@ class DataGraphNode:
         """Create a DataGraphNode from a HoneyNode object."""
         return cls(
             uuid=node.uuid,
-            node_type=node.NODE_TYPE,
             raw_metadata=node._serialise_metadata(node.metadata),
             principal_parent=(
                 node.principal_parent.uuid if node.principal_parent else node.uuid
@@ -76,22 +81,23 @@ class DataGraph(Mapping[UUID, DataGraphNode]):
     _root_meta_folder: Path
 
     def __init__(self, root_meta_folder: Path):
-        self._root = UUID("00000000-0000-0000-0000-000000000000")
         self.nodes = {}
+        self._set_root()
         self._root_meta_folder = root_meta_folder
 
+        self._construct_dag(root_meta_folder)
+
+    def _set_root(self) -> None:
+        self._root = ROOT_UUID
         self.nodes[self._root] = DataGraphNode(
             uuid=self._root,
-            node_type=NodeType.ROOT,
             principal_parent=self._root,
             raw_metadata={
-                "class_uuid": "00000000-0000-0000-0000-000000000000",
+                "class_uuid": str(ROOT_UUID),
                 "node_type": NodeType.ROOT.value,
                 "data": {},
             },
         )
-
-        self._construct_dag(root_meta_folder)
 
     def add_node(self, node: DataGraphNode, overwrite: bool = False) -> None:
         """Add a node to the data graph."""
@@ -148,7 +154,7 @@ class DataGraph(Mapping[UUID, DataGraphNode]):
         self._add_children(self.nodes[self._root], root_meta_folder)
 
     def _would_create_cycle(self, parent: UUID, child: UUID) -> bool:
-        return False  # TODO: not implemented
+        return NotImplemented
 
     def _add_children(self, parent: DataGraphNode, parent_path: Path) -> None:
         children_meta_path = parent_path / "children"
@@ -177,23 +183,20 @@ class DataGraph(Mapping[UUID, DataGraphNode]):
         """
         Obtain children for the associated folder.
 
-        If `is_file_collection` is true, treats the folder as a collection of files,
+        If ``is_file_collection`` is true, treats the folder as a collection of files,
         which reads a slightly flatter layout chosen to avoid excessive nesting
         """
         result: List["DataGraphNode"] = []
         for dir in children_folders:
             uuid: UUID
             raw_metadata: RawMetadata
-            node_type: NodeType
             try:
                 uuid = UUID(dir.name)
                 raw_metadata = DataGraph._read_raw_metadata(dir / "metadata.json")
-                node_type = NodeType(raw_metadata["node_type"])
 
                 result.append(
                     DataGraphNode(
                         uuid=uuid,
-                        node_type=node_type,
                         principal_parent=parent,
                         raw_metadata=raw_metadata,
                         parents={parent},
@@ -207,6 +210,21 @@ class DataGraph(Mapping[UUID, DataGraphNode]):
                 continue
 
         return result
+
+    def match_on(self, partial_metadata: Dict) -> Iterable[UUID]:
+        """
+        Yield all uuids whose nodes' raw_metadatas match the given pattern.
+
+        The match is recursive: every key path and value in ``partial_metadata`` must
+        be present with the same value inside a node's ``raw_metadata`` (but the node
+        may have additional keys).
+        """
+        return (
+            uuid
+            for uuid, node in self.nodes.items()
+            if nested_intersection(node.raw_metadata["data"], partial_metadata)
+            == partial_metadata
+        )
 
     @staticmethod
     def _read_raw_metadata(metadata_json: Path) -> RawMetadata:

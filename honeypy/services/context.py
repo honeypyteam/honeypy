@@ -4,8 +4,15 @@ Context class.
 The context acts like a global service provider.
 """
 
-from honeypy.services.datagraph.data_graph import DataGraph
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from honeypy.services.datagraph.data_graph import DataGraph
+
 from honeypy.services.datagraph.node_factory import NodeFactory
+from honeypy.transform.meta.ir import IRExecutor
 
 
 class HoneyContext:
@@ -21,7 +28,9 @@ class HoneyContext:
 
     data_graph: DataGraph
     node_factory: NodeFactory
+    executor: IRExecutor
 
     def __init__(self, data_graph: DataGraph):
         self.data_graph = data_graph
-        self.node_factory = NodeFactory(data_graph)
+        self.node_factory = NodeFactory(self)
+        self.executor = IRExecutor(self.node_factory)

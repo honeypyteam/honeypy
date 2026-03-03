@@ -9,12 +9,9 @@ def test_honey_file_as_adapter(plugin: PluginGetter, context: ContextGetter):
     plugin_path = plugin("plugin_1", copy=True)
     ctx = context(root_meta_folder=plugin_path / ".honeypy")
 
-    file = ArrayFile(
-        node_factory=ctx.node_factory,
-        principal_parent=UUID("8e4d7b9e-f3b4-4f69-9ae4-83061637ace0"),
-        metadata={
-            "filename": "3_1.csv",
-        },
+    file = ArrayFile.from_uuid(
+        uuid=UUID("a9747823-7fc7-4cbd-8bac-25221a9595e3"),
+        context=ctx,
     )
 
     with file.data() as data:

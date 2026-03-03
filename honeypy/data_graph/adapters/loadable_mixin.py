@@ -116,7 +116,7 @@ class LoadableMixin(ABC, Generic[E, P_co]):
         """
         Convert an in-memory data object back into an iterator of child items.
 
-        The returned iterator will be passed to the base `load` method to replace
+        The returned iterator will be passed to the base ``load`` method to replace
         the node's children.
         """
         raise NotImplementedError
